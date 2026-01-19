@@ -1,13 +1,3 @@
-import { Filesystem } from '@capacitor/filesystem';
-import localforage from 'localforage';
-import ePub from 'epubjs';
-
-// Initialize localforage
-const db = localforage.createInstance({
-  name: 'StabilityReads',
-  storeName: 'documents'
-});
-
 // Global state
 let currentView = 'library';
 let documents = [];
@@ -23,6 +13,12 @@ let readingState = {
   autoPaceStartWPM: 120,
   autoPaceDurationWords: 100
 };
+
+// Initialize localforage
+const db = window.localforage.createInstance({
+  name: 'StabilityReads',
+  storeName: 'documents'
+});
 
 // DOM elements
 const app = document.getElementById('app');
@@ -41,7 +37,14 @@ async function init() {
 }
 
 function setupEventListeners() {
-  importBtn.addEventListener('click', () => fileInput.click());
+  if (!importBtn) {
+    alert('Import button not found');
+    return;
+  }
+  importBtn.addEventListener('click', () => {
+    alert('Import clicked');
+    fileInput.click();
+  });
   fileInput.addEventListener('change', handleFileSelect);
 
   // Normal view
@@ -92,6 +95,7 @@ function renderLibrary() {
 }
 
 async function handleFileSelect(event) {
+  alert('File selected');
   const file = event.target.files[0];
   if (!file) return;
 
@@ -262,4 +266,5 @@ function switchView(view) {
 }
 
 // Start the app
+alert('Script loaded');
 init();
