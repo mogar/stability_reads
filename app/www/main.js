@@ -38,11 +38,9 @@ async function init() {
 
 function setupEventListeners() {
   if (!importBtn) {
-    alert('Import button not found');
     return;
   }
   importBtn.addEventListener('click', () => {
-    alert('Import clicked');
     fileInput.click();
   });
   fileInput.addEventListener('change', handleFileSelect);
@@ -95,19 +93,20 @@ function renderLibrary() {
 }
 
 async function handleFileSelect(event) {
-  alert('File selected');
   const file = event.target.files[0];
   if (!file) return;
 
   try {
-    const content = await readFile(file);
-    const words = await parseDocument(file, content);
+    const words = await parseDocument(file);
+    if (words.length === 0) {
+      throw new Error('No words found in document');
+    }
     const doc = {
       id: generateId(),
       filepath: '', // TODO: copy to internal
       filename: file.name,
       format: file.name.endsWith('.epub') ? 'epub' : 'txt',
-      content: content, // Store content for web
+      words: words,
       lastReadPosition: 0,
       totalWords: words.length,
       addedAt: Date.now(),
@@ -116,8 +115,10 @@ async function handleFileSelect(event) {
     await db.setItem(doc.id, doc);
     documents.push(doc);
     renderLibrary();
+    fileInput.value = ''; // Reset input
   } catch (error) {
     console.error('Error importing document:', error);
+    // Optionally show a message to user, but for now just log
   }
 }
 
@@ -189,9 +190,12 @@ function renderSpeedReading() {
 function updateWordDisplay() {
   const word = readingState.words[readingState.currentWordIndex] || '';
   const display = document.getElementById('word-display');
-  // Add ORP styling
-  const orpIndex = Math.floor(word.length / 3);
-  display.innerHTML = word.substring(0, orpIndex) + '<span style="color:red">' + word[orpIndex] + '</span>' + word.substring(orpIndex + 1);
+  // Add ORP styling: red letter at center
+  const orpIndex = Math.min(2, word.length - 1);
+  const before = word.substring(0, orpIndex);
+  const red = word[orpIndex] || '';
+  const after = word.substring(orpIndex + 1);
+  display.innerHTML = `<span class="before">${before}</span><span class="red">${red}</span><span class="after">${after}</span>`;
 }
 
 function updateProgressSpeed() {
@@ -253,7 +257,7 @@ function openDocument(doc) {
   currentDocument = doc;
   readingState.documentId = doc.id;
   readingState.currentWordIndex = doc.lastReadPosition;
-  readingState.words = parseDocumentFromContent(doc.content, doc.format);
+  readingState.words = doc.words;
   switchView('normal');
   renderNormalReading();
 }
@@ -265,6 +269,69 @@ function switchView(view) {
   speedView.classList.toggle('hidden', view !== 'speed');
 }
 
+async function parseDocument(file) {
+  if (file.name.endsWith('.epub')) {
+    return await parseEPUB(file);
+  } else {
+    const content = await readFile(file);
+    return parseTXT(content);
+  }
+}
+
+function parseTXT(content) {
+  return content.split(/\s+/).filter(word => word.length > 0);
+}
+
+async function parseEPUB(file) {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const zip = await window.JSZip.loadAsync(arrayBuffer);
+
+    // Parse container.xml
+    const containerText = await zip.file('META-INF/container.xml').async('text');
+    const parser = new DOMParser();
+    const containerDoc = parser.parseFromString(containerText, 'text/xml');
+    const rootfile = containerDoc.querySelector('rootfile').getAttribute('full-path');
+
+    // Parse OPF
+    const opfText = await zip.file(rootfile).async('text');
+    const opfDoc = parser.parseFromString(opfText, 'text/xml');
+
+    // Build manifest
+    const manifest = {};
+    opfDoc.querySelectorAll('manifest item').forEach(item => {
+      manifest[item.getAttribute('id')] = item.getAttribute('href');
+    });
+
+    // Get spine
+    const spine = opfDoc.querySelectorAll('spine itemref');
+
+    let fullText = '';
+    for (const itemref of spine) {
+      const id = itemref.getAttribute('idref');
+      const href = manifest[id];
+      if (href && (href.endsWith('.html') || href.endsWith('.xhtml'))) {
+        try {
+          const htmlText = await zip.file(href).async('text');
+          const htmlDoc = parser.parseFromString(htmlText, 'text/html');
+          const text = htmlDoc.body ? htmlDoc.body.textContent : '';
+          fullText += text + ' ';
+        } catch (e) {
+          // Skip
+        }
+      }
+    }
+
+    return fullText.split(/\s+/).filter(word => word.length > 0);
+  } catch (error) {
+    console.error('EPUB parsing error:', error);
+    return ['EPUB', 'parsing', 'failed'];
+  }
+}
+
+function generateId() {
+  return Math.random().toString(36).substr(2, 9);
+}
+
 // Start the app
-alert('Script loaded');
 init();

@@ -67,7 +67,25 @@ footer {
 }
 
 #word-display {
-  text-align: center;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.before {
+  text-align: right;
+  flex: 1;
+}
+
+.red {
+  color: red;
+  flex: 0 0 auto;
+}
+
+.after {
+  text-align: left;
+  flex: 1;
 }
 
 .speed-controls {
