@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Stability Reads</string>
+    <string name="title_activity_main">Stability Reads</string>
+    <string name="package_name">com.stability.reads</string>
+    <string name="custom_url_scheme">com.stability.reads</string>
+</resources>

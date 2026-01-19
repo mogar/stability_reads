@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stability Reads</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <input type="file" id="file-input" accept=".txt,.epub" style="display:none">
+    <div id="library-view" class="view">
+      <header>
+        <h1>My Documents</h1>
+        <button id="import-btn">+</button>
+      </header>
+      <div id="document-list">
+        <!-- Documents will be listed here -->
+      </div>
+    </div>
+
+    <div id="normal-view" class="view hidden">
+      <header>
+        <button id="back-to-library">←</button>
+        <div class="controls">
+          <button id="menu-btn">︙</button>
+          <button id="night-mode-btn">🌙</button>
+          <button id="font-size-down">A-</button>
+          <button id="font-size-up">A+</button>
+        </div>
+      </header>
+      <div id="text-container">
+        <!-- Text will be rendered here -->
+      </div>
+      <footer>
+        <span id="progress">0% • Word 0/0</span>
+        <div class="nav-buttons">
+          <button id="to-library">Library</button>
+          <button id="to-speed">Speed Read</button>
+        </div>
+      </footer>
+    </div>
+
+    <div id="speed-view" class="view hidden">
+      <header>
+        <button id="back-to-library-speed">←</button>
+        <button id="reset-btn">Reset</button>
+      </header>
+      <div id="rsvp-container">
+        <div id="word-display"></div>
+      </div>
+      <div class="speed-controls">
+        <input type="range" id="speed-slider" min="120" max="900" value="300">
+        <div class="speed-labels">
+          <span>120</span>
+          <span>900 WPM</span>
+        </div>
+        <div id="current-wpm">Current: 300 WPM</div>
+        <label>
+          <input type="checkbox" id="auto-pace-toggle"> Auto-Pace
+        </label>
+      </div>
+      <footer>
+        <span id="progress-speed">0% • Word 0/0</span>
+        <div class="nav-buttons">
+          <button id="play-pause-btn">▶</button>
+          <button id="to-library-speed">Library</button>
+          <button id="to-normal">Normal</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+  <script type="module" src="main.js"></script>
+</body>
+</html>

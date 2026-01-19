@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Android",
+      "type": "shell",
+      "command": "npx",
+      "args": ["cap", "run", "android"],
+      "group": "build"
+    }
+  ]
+}
