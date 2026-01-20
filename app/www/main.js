@@ -289,40 +289,54 @@ async function parseEPUB(file) {
 
     // Parse container.xml
     const containerText = await zip.file('META-INF/container.xml').async('text');
+    console.log('Container XML:', containerText.substring(0, 200));
     const parser = new DOMParser();
     const containerDoc = parser.parseFromString(containerText, 'text/xml');
     const rootfile = containerDoc.querySelector('rootfile').getAttribute('full-path');
+    console.log('Rootfile:', rootfile);
 
     // Parse OPF
     const opfText = await zip.file(rootfile).async('text');
+    console.log('OPF length:', opfText.length);
     const opfDoc = parser.parseFromString(opfText, 'text/xml');
+
+    // Get base path for manifest hrefs
+    const basePath = rootfile.includes('/') ? rootfile.substring(0, rootfile.lastIndexOf('/') + 1) : '';
 
     // Build manifest
     const manifest = {};
     opfDoc.querySelectorAll('manifest item').forEach(item => {
-      manifest[item.getAttribute('id')] = item.getAttribute('href');
+      manifest[item.getAttribute('id')] = basePath + item.getAttribute('href');
     });
+    console.log('Manifest items:', Object.keys(manifest).length);
 
     // Get spine
     const spine = opfDoc.querySelectorAll('spine itemref');
+    console.log('Spine items:', spine.length);
 
     let fullText = '';
     for (const itemref of spine) {
       const id = itemref.getAttribute('idref');
       const href = manifest[id];
-      if (href && (href.endsWith('.html') || href.endsWith('.xhtml'))) {
+      console.log('Processing spine item:', id, href);
+      if (href && (href.endsWith('.html') || href.endsWith('.xhtml') || href.endsWith('.htm'))) {
         try {
           const htmlText = await zip.file(href).async('text');
+          console.log('HTML length for', href, ':', htmlText.length);
           const htmlDoc = parser.parseFromString(htmlText, 'text/html');
           const text = htmlDoc.body ? htmlDoc.body.textContent : '';
+          console.log('Text length:', text.length);
           fullText += text + ' ';
         } catch (e) {
-          // Skip
+          console.log('Error processing', href, ':', e);
         }
       }
     }
 
-    return fullText.split(/\s+/).filter(word => word.length > 0);
+    console.log('Total fullText length:', fullText.length);
+    const words = fullText.split(/\s+/).filter(word => word.length > 0);
+    console.log('Words count:', words.length);
+    return words;
   } catch (error) {
     console.error('EPUB parsing error:', error);
     return ['EPUB', 'parsing', 'failed'];
