@@ -20,6 +20,29 @@ let isNightMode = false;
 let fontSize = 16;
 let speedFontSize = 48;
 
+// Utility functions
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+function mergeTrailingPunctuation(words) {
+  const result = [];
+  for (const word of words) {
+    if (word.length === 1 && /[-\u2013\u2014,.!?;:]/.test(word)) {
+      // Single punctuation character, append to previous word
+      if (result.length > 0) {
+        result[result.length - 1] += word;
+      } else {
+        // If no previous, just add it (though unlikely)
+        result.push(word);
+      }
+    } else {
+      result.push(word);
+    }
+  }
+  return result;
+}
+
 // Virtual rendering for normal reading
 let renderedStartIndex = 0;
 let renderedEndIndex = 0;
@@ -427,7 +450,9 @@ async function parseDocument(file) {
 function parseTXT(content) {
   // Insert spaces around punctuation to split words properly
   content = content.replace(/([-\u2013\u2014,.!?;:])/g, ' $1 ');
-  return content.split(/\s+/).filter(word => word.length > 0);
+  let words = content.split(/\s+/).filter(word => word.length > 0);
+  words = mergeTrailingPunctuation(words);
+  return words;
 }
 
 async function parseEPUB(file) {
@@ -482,7 +507,10 @@ async function parseEPUB(file) {
     }
 
     console.log('Total fullText length:', fullText.length);
-    const words = fullText.split(/\s+/).filter(word => word.length > 0);
+    // Insert spaces around punctuation to split words properly
+    fullText = fullText.replace(/([-\u2013\u2014,.!?;:])/g, ' $1 ');
+    let words = fullText.split(/\s+/).filter(word => word.length > 0);
+    words = mergeTrailingPunctuation(words);
     console.log('Words count:', words.length);
     return words;
   } catch (error) {
