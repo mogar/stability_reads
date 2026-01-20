@@ -14,6 +14,10 @@ let readingState = {
   autoPaceDurationWords: 100
 };
 
+// UI state
+let isNightMode = false;
+let fontSize = 16;
+
 // Initialize localforage
 const db = window.localforage.createInstance({
   name: 'StabilityReads',
@@ -31,9 +35,24 @@ const fileInput = document.getElementById('file-input');
 
 // Initialize app
 async function init() {
+  // Load UI preferences
+  isNightMode = localStorage.getItem('nightMode') === 'true';
+  fontSize = parseInt(localStorage.getItem('fontSize')) || 16;
+  applyUIState();
+
   await loadDocuments();
   renderLibrary();
   setupEventListeners();
+}
+
+function applyUIState() {
+  document.body.classList.toggle('night', isNightMode);
+  updateFontSize();
+}
+
+function updateFontSize() {
+  document.documentElement.style.setProperty('--font-size', fontSize + 'px');
+  localStorage.setItem('fontSize', fontSize);
 }
 
 function setupEventListeners() {
@@ -57,6 +76,19 @@ function setupEventListeners() {
   document.getElementById('to-speed').addEventListener('click', () => {
     switchView('speed');
     renderSpeedReading();
+  });
+  document.getElementById('night-mode-btn').addEventListener('click', () => {
+    isNightMode = !isNightMode;
+    document.body.classList.toggle('night', isNightMode);
+    localStorage.setItem('nightMode', isNightMode);
+  });
+  document.getElementById('font-size-down').addEventListener('click', () => {
+    fontSize = Math.max(12, fontSize - 2);
+    updateFontSize();
+  });
+  document.getElementById('font-size-up').addEventListener('click', () => {
+    fontSize = Math.min(24, fontSize + 2);
+    updateFontSize();
   });
 
   // Speed view
