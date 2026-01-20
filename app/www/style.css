@@ -72,25 +72,37 @@ footer {
 }
 
 #word-display {
-  display: flex;
+  position: relative;
   width: 100%;
-  justify-content: center;
-  align-items: center;
+  height: 100px; /* Adjust as needed */
+  text-align: center; /* Fallback */
+  font-family: 'Courier New', monospace;
 }
 
 .before {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: calc(33.33% - 0.5ch);
   text-align: right;
-  flex: 1;
+  transform: translateY(-50%);
 }
 
 .red {
+  position: absolute;
+  left: 33.33%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   color: red;
-  flex: 0 0 auto;
 }
 
 .after {
+  position: absolute;
+  left: calc(33.33% + 0.5ch);
+  top: 50%;
+  width: calc(66.67% - 0.5ch);
   text-align: left;
-  flex: 1;
+  transform: translateY(-50%);
 }
 
 .speed-controls {

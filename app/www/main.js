@@ -290,8 +290,10 @@ function renderSpeedReading() {
 function updateWordDisplay() {
   const word = readingState.words[readingState.currentWordIndex] || '';
   const display = document.getElementById('word-display');
-  // Add ORP styling: red letter at center
-  const orpIndex = Math.min(2, word.length - 1);
+  // Calculate ORP index: closest to 1/3 of the way into the word
+  let orpIndex = Math.round((word.length - 1) / 3);
+  if (word.length === 2) orpIndex = 1; // For 2-letter words, choose the last letter
+  if (word.length === 1) orpIndex = 0; // Single letter, first
   const before = word.substring(0, orpIndex);
   const red = word[orpIndex] || '';
   const after = word.substring(orpIndex + 1);
