@@ -147,8 +147,18 @@ function renderLibrary() {
     item.innerHTML = `
       <div>${doc.filename}</div>
       <div>${progressText}</div>
+      <button class="delete-btn">🗑️</button>
     `;
-    item.addEventListener('click', () => openDocument(doc));
+    item.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('delete-btn')) {
+        openDocument(doc);
+      }
+    });
+    const deleteBtn = item.querySelector('.delete-btn');
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteDocument(doc.id);
+    });
     documentList.appendChild(item);
   });
 }
@@ -455,8 +465,12 @@ async function parseEPUB(file) {
   }
 }
 
-function generateId() {
-  return Math.random().toString(36).substr(2, 9);
+async function deleteDocument(docId) {
+  if (confirm('Delete this document?')) {
+    await db.removeItem(docId);
+    documents = documents.filter(doc => doc.id !== docId);
+    renderLibrary();
+  }
 }
 
 // Start the app
