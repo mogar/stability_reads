@@ -46,16 +46,28 @@ function setupEventListeners() {
   fileInput.addEventListener('change', handleFileSelect);
 
   // Normal view
-  document.getElementById('back-to-library').addEventListener('click', () => switchView('library'));
-  document.getElementById('to-library').addEventListener('click', () => switchView('library'));
+  document.getElementById('back-to-library').addEventListener('click', async () => {
+    await saveReadingState();
+    switchView('library');
+  });
+  document.getElementById('to-library').addEventListener('click', async () => {
+    await saveReadingState();
+    switchView('library');
+  });
   document.getElementById('to-speed').addEventListener('click', () => {
     switchView('speed');
     renderSpeedReading();
   });
 
   // Speed view
-  document.getElementById('back-to-library-speed').addEventListener('click', () => switchView('library'));
-  document.getElementById('to-library-speed').addEventListener('click', () => switchView('library'));
+  document.getElementById('back-to-library-speed').addEventListener('click', async () => {
+    await saveReadingState();
+    switchView('library');
+  });
+  document.getElementById('to-library-speed').addEventListener('click', async () => {
+    await saveReadingState();
+    switchView('library');
+  });
   document.getElementById('to-normal').addEventListener('click', () => {
     switchView('normal');
     renderNormalReading();
@@ -63,6 +75,7 @@ function setupEventListeners() {
   document.getElementById('play-pause-btn').addEventListener('click', togglePlayPause);
   document.getElementById('reset-btn').addEventListener('click', resetReading);
   document.getElementById('speed-slider').addEventListener('input', updateSpeed);
+  document.getElementById('auto-pace-toggle').addEventListener('change', toggleAutoPace);
 }
 
 async function loadDocuments() {
@@ -181,6 +194,11 @@ function updateHighlight() {
   }
 }
 
+function updateProgress() {
+  const progress = Math.round((readingState.currentWordIndex / readingState.words.length) * 100);
+  document.getElementById('progress').textContent = `${progress}% • Word ${readingState.currentWordIndex + 1}/${readingState.words.length}`;
+}
+
 function renderSpeedReading() {
   updateWordDisplay();
   updateProgressSpeed();
@@ -221,7 +239,7 @@ function togglePlayPause() {
 let playbackInterval;
 
 function startPlayback() {
-  const delay = 60000 / readingState.speedWPM;
+  const delay = calculateDelay();
   playbackInterval = setInterval(() => {
     readingState.currentWordIndex++;
     if (readingState.currentWordIndex >= readingState.words.length) {
@@ -230,8 +248,23 @@ function startPlayback() {
     } else {
       updateWordDisplay();
       updateProgressSpeed();
+      updateSpeedDisplay();
+      if (readingState.autoPaceEnabled) {
+        // Restart with new delay
+        stopPlayback();
+        startPlayback();
+      }
     }
   }, delay);
+}
+
+function calculateDelay() {
+  let wpm = readingState.speedWPM;
+  if (readingState.autoPaceEnabled) {
+    const progress = Math.min(readingState.currentWordIndex / readingState.autoPaceDurationWords, 1);
+    wpm = readingState.autoPaceStartWPM + (readingState.targetSpeedWPM - readingState.autoPaceStartWPM) * progress;
+  }
+  return 60000 / wpm;
 }
 
 function stopPlayback() {
@@ -246,7 +279,21 @@ function resetReading() {
 
 function updateSpeed(event) {
   readingState.speedWPM = parseInt(event.target.value);
+  if (readingState.autoPaceEnabled) {
+    readingState.targetSpeedWPM = readingState.speedWPM;
+  }
   updateSpeedDisplay();
+  if (readingState.isPlaying) {
+    stopPlayback();
+    startPlayback();
+  }
+}
+
+function toggleAutoPace(event) {
+  readingState.autoPaceEnabled = event.target.checked;
+  if (readingState.autoPaceEnabled) {
+    readingState.targetSpeedWPM = readingState.speedWPM;
+  }
   if (readingState.isPlaying) {
     stopPlayback();
     startPlayback();
@@ -258,6 +305,8 @@ function openDocument(doc) {
   readingState.documentId = doc.id;
   readingState.currentWordIndex = doc.lastReadPosition;
   readingState.words = doc.words;
+  doc.lastAccessedAt = Date.now();
+  db.setItem(doc.id, doc); // Update access time
   switchView('normal');
   renderNormalReading();
 }
@@ -349,3 +398,22 @@ function generateId() {
 
 // Start the app
 init();
+setupLifecycleListeners();
+
+function setupLifecycleListeners() {
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+    window.Capacitor.Plugins.App.addListener('appStateChange', ({ isActive }) => {
+      if (!isActive) {
+        saveReadingState();
+      }
+    });
+  }
+}
+
+async function saveReadingState() {
+  if (currentDocument && readingState.documentId) {
+    currentDocument.lastReadPosition = readingState.currentWordIndex;
+    currentDocument.lastAccessedAt = Date.now();
+    await db.setItem(readingState.documentId, currentDocument);
+  }
+}
