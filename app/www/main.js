@@ -11,7 +11,8 @@ let readingState = {
   targetSpeedWPM: 300,
   autoPaceEnabled: false,
   autoPaceStartWPM: 120,
-  autoPaceDurationWords: 100
+  autoPaceDurationWords: 100,
+  autoPaceStartWordIndex: 0
 };
 
 // UI state
@@ -277,6 +278,11 @@ function togglePlayPause() {
   readingState.isPlaying = !readingState.isPlaying;
   document.getElementById('play-pause-btn').textContent = readingState.isPlaying ? '‖' : '▶';
   if (readingState.isPlaying) {
+    if (readingState.autoPaceEnabled) {
+      readingState.autoPaceStartWordIndex = readingState.currentWordIndex;
+      readingState.autoPaceStartWPM = 120; // Fixed starting speed
+      readingState.targetSpeedWPM = readingState.speedWPM;
+    }
     startPlayback();
   } else {
     stopPlayback();
@@ -308,7 +314,7 @@ function startPlayback() {
 function calculateDelay() {
   let wpm = readingState.speedWPM;
   if (readingState.autoPaceEnabled) {
-    const progress = Math.min(readingState.currentWordIndex / readingState.autoPaceDurationWords, 1);
+    const progress = Math.min((readingState.currentWordIndex - readingState.autoPaceStartWordIndex) / readingState.autoPaceDurationWords, 1);
     wpm = readingState.autoPaceStartWPM + (readingState.targetSpeedWPM - readingState.autoPaceStartWPM) * progress;
   }
   return 60000 / wpm;
@@ -325,10 +331,16 @@ function resetReading() {
 }
 
 function updateSpeed(event) {
-  readingState.speedWPM = parseInt(event.target.value);
-  if (readingState.autoPaceEnabled) {
-    readingState.targetSpeedWPM = readingState.speedWPM;
+  const newSpeed = parseInt(event.target.value);
+  if (readingState.autoPaceEnabled && readingState.isPlaying) {
+    // Calculate current WPM for smooth transition
+    const progress = Math.min((readingState.currentWordIndex - readingState.autoPaceStartWordIndex) / readingState.autoPaceDurationWords, 1);
+    const currentWpm = readingState.autoPaceStartWPM + (readingState.targetSpeedWPM - readingState.autoPaceStartWPM) * progress;
+    readingState.autoPaceStartWPM = currentWpm;
+    readingState.autoPaceStartWordIndex = readingState.currentWordIndex;
   }
+  readingState.speedWPM = newSpeed;
+  readingState.targetSpeedWPM = newSpeed;
   updateSpeedDisplay();
   if (readingState.isPlaying) {
     stopPlayback();
@@ -339,6 +351,8 @@ function updateSpeed(event) {
 function toggleAutoPace(event) {
   readingState.autoPaceEnabled = event.target.checked;
   if (readingState.autoPaceEnabled) {
+    readingState.autoPaceStartWordIndex = readingState.currentWordIndex;
+    readingState.autoPaceStartWPM = readingState.speedWPM;
     readingState.targetSpeedWPM = readingState.speedWPM;
   }
   if (readingState.isPlaying) {
@@ -375,6 +389,8 @@ async function parseDocument(file) {
 }
 
 function parseTXT(content) {
+  // Insert spaces around punctuation to split words properly
+  content = content.replace(/([-\u2013\u2014,.!?;:])/g, ' $1 ');
   return content.split(/\s+/).filter(word => word.length > 0);
 }
 

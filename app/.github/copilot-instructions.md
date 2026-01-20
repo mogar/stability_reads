@@ -15,9 +15,21 @@
 - [x] Create and Run Task - Created tasks.json with Run Android task. - Completed.
 
 - [ ] Launch the Project
-	<!-- Awaiting user confirmation. -->
+	App launches and runs on Android device. - Completed.
 
 - [x] Ensure Documentation is Complete - Created README.md, updated copilot-instructions.md. - Completed.
+
+Remaining tasks for full polish:
+- Implement document deletion from library.
+- Copy imported files to app's internal storage for persistence.
+- Add loading indicators for import and parsing.
+- Improve error handling (e.g., invalid files).
+- Test on various Android devices.
+- Build final APK with signing.
+- Fix word splitting for hyphenated words in speed reading.
+- Optimize red letter positioning in speed reading.
+- Add keyboard shortcuts for desktop testing.
+- Implement bookmarks/highlights (future feature).
 
 <!--
 ## Execution Guidelines
