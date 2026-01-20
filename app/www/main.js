@@ -17,6 +17,7 @@ let readingState = {
 // UI state
 let isNightMode = false;
 let fontSize = 16;
+let speedFontSize = 48;
 
 // Initialize localforage
 const db = window.localforage.createInstance({
@@ -38,6 +39,7 @@ async function init() {
   // Load UI preferences
   isNightMode = localStorage.getItem('nightMode') === 'true';
   fontSize = parseInt(localStorage.getItem('fontSize')) || 16;
+  speedFontSize = parseInt(localStorage.getItem('speedFontSize')) || 48;
   applyUIState();
 
   await loadDocuments();
@@ -48,11 +50,17 @@ async function init() {
 function applyUIState() {
   document.body.classList.toggle('night', isNightMode);
   updateFontSize();
+  updateSpeedFontSize();
 }
 
 function updateFontSize() {
   document.documentElement.style.setProperty('--font-size', fontSize + 'px');
   localStorage.setItem('fontSize', fontSize);
+}
+
+function updateSpeedFontSize() {
+  document.getElementById('word-display').style.fontSize = speedFontSize + 'px';
+  localStorage.setItem('speedFontSize', speedFontSize);
 }
 
 function setupEventListeners() {
@@ -86,9 +94,13 @@ function setupEventListeners() {
     fontSize = Math.max(12, fontSize - 2);
     updateFontSize();
   });
-  document.getElementById('font-size-up').addEventListener('click', () => {
-    fontSize = Math.min(24, fontSize + 2);
-    updateFontSize();
+  document.getElementById('speed-font-size-down').addEventListener('click', () => {
+    speedFontSize = Math.max(24, speedFontSize - 4);
+    updateSpeedFontSize();
+  });
+  document.getElementById('speed-font-size-up').addEventListener('click', () => {
+    speedFontSize = Math.min(72, speedFontSize + 4);
+    updateSpeedFontSize();
   });
 
   // Speed view
