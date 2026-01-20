@@ -96,9 +96,12 @@ function renderLibrary() {
   documents.forEach(doc => {
     const item = document.createElement('div');
     item.className = 'document-item';
+    item.setAttribute('data-doc-id', doc.id);
+    const progress = Math.round((doc.lastReadPosition / doc.totalWords) * 100);
+    const progressText = `${progress}% • ${doc.lastReadPosition}/${doc.totalWords} words`;
     item.innerHTML = `
       <div>${doc.filename}</div>
-      <div>${Math.round((doc.lastReadPosition / doc.totalWords) * 100)}% • ${doc.lastReadPosition}/${doc.totalWords} words</div>
+      <div>${progressText}</div>
     `;
     item.addEventListener('click', () => openDocument(doc));
     documentList.appendChild(item);
@@ -415,5 +418,12 @@ async function saveReadingState() {
     currentDocument.lastReadPosition = readingState.currentWordIndex;
     currentDocument.lastAccessedAt = Date.now();
     await db.setItem(readingState.documentId, currentDocument);
+    // Update progress in library view
+    const item = document.querySelector(`[data-doc-id="${readingState.documentId}"]`);
+    if (item) {
+      const progress = Math.round((currentDocument.lastReadPosition / currentDocument.totalWords) * 100);
+      const progressText = `${progress}% • ${currentDocument.lastReadPosition}/${currentDocument.totalWords} words`;
+      item.children[1].textContent = progressText;
+    }
   }
 }
