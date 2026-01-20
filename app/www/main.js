@@ -20,6 +20,11 @@ let isNightMode = false;
 let fontSize = 16;
 let speedFontSize = 48;
 
+// Virtual rendering for normal reading
+let renderedStartIndex = 0;
+let renderedEndIndex = 0;
+const RENDER_WINDOW_SIZE = 200; // Number of words to render around current position
+
 // Initialize localforage
 const db = window.localforage.createInstance({
   name: 'StabilityReads',
@@ -223,27 +228,46 @@ async function parseEPUB(content) {
 function renderNormalReading() {
   const textContainer = document.getElementById('text-container');
   textContainer.innerHTML = '';
-  readingState.words.forEach((word, index) => {
+  
+  // Calculate render window
+  const halfWindow = Math.floor(RENDER_WINDOW_SIZE / 2);
+  renderedStartIndex = Math.max(0, readingState.currentWordIndex - halfWindow);
+  renderedEndIndex = Math.min(readingState.words.length, renderedStartIndex + RENDER_WINDOW_SIZE);
+  
+  // Adjust if at end
+  if (renderedEndIndex - renderedStartIndex < RENDER_WINDOW_SIZE && renderedStartIndex > 0) {
+    renderedStartIndex = Math.max(0, renderedEndIndex - RENDER_WINDOW_SIZE);
+  }
+  
+  for (let index = renderedStartIndex; index < renderedEndIndex; index++) {
     const span = document.createElement('span');
     span.className = 'word';
-    span.textContent = word + ' ';
+    span.textContent = readingState.words[index] + ' ';
     span.addEventListener('click', () => setCurrentWord(index));
     textContainer.appendChild(span);
-  });
+  }
+  
   updateHighlight();
   updateProgress();
 }
 
 function setCurrentWord(index) {
   readingState.currentWordIndex = index;
-  updateHighlight();
-  updateProgress();
+  
+  // Check if we need to re-render the window
+  if (index < renderedStartIndex || index >= renderedEndIndex) {
+    renderNormalReading();
+  } else {
+    updateHighlight();
+    updateProgress();
+  }
 }
 
 function updateHighlight() {
   const words = document.querySelectorAll('.word');
+  const localIndex = readingState.currentWordIndex - renderedStartIndex;
   words.forEach((word, index) => {
-    word.classList.toggle('highlighted', index === readingState.currentWordIndex);
+    word.classList.toggle('highlighted', index === localIndex);
   });
   // Scroll to highlighted word
   const highlighted = document.querySelector('.word.highlighted');
