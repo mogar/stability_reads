@@ -51,10 +51,10 @@ function mergeTrailingPunctuation(words) {
   return result;
 }
 
-// Virtual rendering for normal reading
+// Page-based rendering for normal reading
 let renderedStartIndex = 0;
 let renderedEndIndex = 0;
-const RENDER_WINDOW_SIZE = 200; // Number of words to render around current position
+let wordsPerPage = 100; // Initial estimate, will be calculated dynamically
 
 // Initialize localforage
 const db = window.localforage.createInstance({
@@ -93,6 +93,10 @@ function applyUIState() {
 function updateFontSize() {
   document.documentElement.style.setProperty('--font-size', fontSize + 'px');
   localStorage.setItem('fontSize', fontSize);
+  // Re-render normal view if currently active to adjust word count
+  if (currentView === 'normal') {
+    renderNormalReading();
+  }
 }
 
 function updateSpeedFontSize() {
@@ -150,6 +154,9 @@ function setupEventListeners() {
   document.getElementById('speed-font-size-down').addEventListener('click', handleSpeedFontSizeDown);
   document.getElementById('speed-font-size-up').addEventListener('click', handleSpeedFontSizeUp);
 
+  // Swipe gestures for normal reading navigation
+  setupNormalViewSwipeGestures();
+
   // Speed view
   document.getElementById('back-to-library-speed').addEventListener('click', async () => {
     await saveReadingState();
@@ -173,6 +180,40 @@ function setupEventListeners() {
 
   // Swipe gestures for speed reading navigation
   setupSwipeGestures();
+}
+
+function setupNormalViewSwipeGestures() {
+  let touchStartX = 0;
+  let touchStartY = 0;
+  const swipeThreshold = 50; // Minimum distance for a swipe
+
+  const textContainer = document.getElementById('text-container');
+
+  textContainer.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  textContainer.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+
+    // Check if this is a horizontal swipe
+    if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
+      e.preventDefault();
+
+      if (deltaX > 0) {
+        // Swipe right - go to previous page
+        goToPreviousPage();
+      } else {
+        // Swipe left - go to next page
+        goToNextPage();
+      }
+    }
+  });
 }
 
 function setupSwipeGestures() {
@@ -237,6 +278,22 @@ function goToNextWord() {
     updateWordDisplay();
     updateProgressSpeed();
   }
+}
+
+function goToNextPage() {
+  const newIndex = Math.min(
+    readingState.words.length - 1,
+    readingState.currentWordIndex + wordsPerPage
+  );
+  setCurrentWord(newIndex);
+}
+
+function goToPreviousPage() {
+  const newIndex = Math.max(
+    0,
+    readingState.currentWordIndex - wordsPerPage
+  );
+  setCurrentWord(newIndex);
 }
 
 async function loadDocuments() {
@@ -364,17 +421,14 @@ async function parseEPUB(content) {
 function renderNormalReading() {
   const textContainer = document.getElementById('text-container');
   textContainer.innerHTML = '';
-  
-  // Calculate render window
-  const halfWindow = Math.floor(RENDER_WINDOW_SIZE / 2);
-  renderedStartIndex = Math.max(0, readingState.currentWordIndex - halfWindow);
-  renderedEndIndex = Math.min(readingState.words.length, renderedStartIndex + RENDER_WINDOW_SIZE);
-  
-  // Adjust if at end
-  if (renderedEndIndex - renderedStartIndex < RENDER_WINDOW_SIZE && renderedStartIndex > 0) {
-    renderedStartIndex = Math.max(0, renderedEndIndex - RENDER_WINDOW_SIZE);
-  }
-  
+
+  // Calculate how many words fit on screen
+  wordsPerPage = calculateWordsPerPage();
+
+  // Render one page starting from current position
+  renderedStartIndex = readingState.currentWordIndex;
+  renderedEndIndex = Math.min(readingState.words.length, renderedStartIndex + wordsPerPage);
+
   for (let index = renderedStartIndex; index < renderedEndIndex; index++) {
     const span = document.createElement('span');
     span.className = 'word';
@@ -382,21 +436,40 @@ function renderNormalReading() {
     span.addEventListener('click', () => setCurrentWord(index));
     textContainer.appendChild(span);
   }
-  
+
   updateHighlight();
   updateProgress();
 }
 
+function calculateWordsPerPage() {
+  const textContainer = document.getElementById('text-container');
+  const containerHeight = textContainer.clientHeight;
+  const containerWidth = textContainer.clientWidth;
+
+  // Account for padding (20px top + 40px bottom)
+  const availableHeight = containerHeight - 60;
+  const availableWidth = containerWidth - 40; // Account for left/right padding
+
+  // Estimate words per line based on average word length and font size
+  const avgWordLength = 6; // characters + space
+  const charWidth = fontSize * 0.6; // Approximate character width
+  const wordsPerLine = Math.floor(availableWidth / (avgWordLength * charWidth));
+
+  // Estimate lines per page based on line height
+  const lineHeight = fontSize * 1.5; // Based on CSS line-height
+  const linesPerPage = Math.floor(availableHeight / lineHeight);
+
+  const estimated = Math.max(1, wordsPerLine * linesPerPage);
+
+  // Return a reasonable estimate
+  return estimated > 0 ? estimated : 50;
+}
+
 function setCurrentWord(index) {
   readingState.currentWordIndex = index;
-  
-  // Check if we need to re-render the window
-  if (index < renderedStartIndex || index >= renderedEndIndex) {
-    renderNormalReading();
-  } else {
-    updateHighlight();
-    updateProgress();
-  }
+
+  // Always re-render to show page starting from clicked word
+  renderNormalReading();
 }
 
 function updateHighlight() {
@@ -405,11 +478,6 @@ function updateHighlight() {
   words.forEach((word, index) => {
     word.classList.toggle('highlighted', index === localIndex);
   });
-  // Scroll to highlighted word
-  const highlighted = document.querySelector('.word.highlighted');
-  if (highlighted) {
-    highlighted.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
 }
 
 function updateProgress() {
