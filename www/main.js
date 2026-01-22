@@ -490,15 +490,27 @@ async function parseEPUB(file) {
     const zip = await window.JSZip.loadAsync(arrayBuffer);
 
     // Parse container.xml
-    const containerText = await zip.file('META-INF/container.xml').async('text');
+    const containerFile = zip.file('META-INF/container.xml');
+    if (!containerFile) {
+      throw new Error('Invalid EPUB: Missing container.xml. This file may be corrupted or not a valid EPUB.');
+    }
+    const containerText = await containerFile.async('text');
     console.log('Container XML:', containerText.substring(0, 200));
     const parser = new DOMParser();
     const containerDoc = parser.parseFromString(containerText, 'text/xml');
-    const rootfile = containerDoc.querySelector('rootfile').getAttribute('full-path');
+    const rootfileElement = containerDoc.querySelector('rootfile');
+    if (!rootfileElement) {
+      throw new Error('Invalid EPUB: Cannot find content location in container.xml');
+    }
+    const rootfile = rootfileElement.getAttribute('full-path');
     console.log('Rootfile:', rootfile);
 
     // Parse OPF
-    const opfText = await zip.file(rootfile).async('text');
+    const opfFile = zip.file(rootfile);
+    if (!opfFile) {
+      throw new Error('Invalid EPUB: Cannot find content file. The EPUB structure may be malformed.');
+    }
+    const opfText = await opfFile.async('text');
     console.log('OPF length:', opfText.length);
     const opfDoc = parser.parseFromString(opfText, 'text/xml');
 
@@ -516,35 +528,68 @@ async function parseEPUB(file) {
     const spine = opfDoc.querySelectorAll('spine itemref');
     console.log('Spine items:', spine.length);
 
+    if (spine.length === 0) {
+      throw new Error('Invalid EPUB: No chapters found. The EPUB may be empty or corrupted.');
+    }
+
     let fullText = '';
+    let successfulChapters = 0;
+    let failedChapters = 0;
+
     for (const itemref of spine) {
       const id = itemref.getAttribute('idref');
       const href = manifest[id];
       console.log('Processing spine item:', id, href);
       if (href && (href.endsWith('.html') || href.endsWith('.xhtml') || href.endsWith('.htm'))) {
         try {
-          const htmlText = await zip.file(href).async('text');
+          const htmlFile = zip.file(href);
+          if (!htmlFile) {
+            console.log('Chapter file not found:', href);
+            failedChapters++;
+            continue;
+          }
+          const htmlText = await htmlFile.async('text');
           console.log('HTML length for', href, ':', htmlText.length);
           const htmlDoc = parser.parseFromString(htmlText, 'text/html');
           const text = htmlDoc.body ? htmlDoc.body.textContent : '';
           console.log('Text length:', text.length);
           fullText += text + ' ';
+          successfulChapters++;
         } catch (e) {
           console.log('Error processing', href, ':', e);
+          failedChapters++;
         }
       }
     }
 
     console.log('Total fullText length:', fullText.length);
+    console.log('Successfully parsed chapters:', successfulChapters, 'Failed:', failedChapters);
+
+    if (fullText.trim().length === 0) {
+      throw new Error('EPUB contains no readable text. All chapters failed to parse or are empty.');
+    }
+
     // Insert spaces around punctuation to split words properly
     fullText = fullText.replace(/([,\.!?;:\u2013\u2014])/g, ' $1 ');
     let words = fullText.split(/\s+/).filter(word => word.length > 0);
     words = mergeTrailingPunctuation(words);
     console.log('Words count:', words.length);
+
+    // Warn user if some chapters failed but we got some content
+    if (failedChapters > 0 && successfulChapters > 0) {
+      setTimeout(() => {
+        alert(`Warning: ${failedChapters} chapter(s) could not be parsed. The book may be incomplete.`);
+      }, 500);
+    }
+
     return words;
   } catch (error) {
     console.error('EPUB parsing error:', error);
-    throw new Error('Failed to parse EPUB file');
+    // Re-throw with user-friendly message if we have one, otherwise use generic message
+    if (error.message && error.message.startsWith('Invalid EPUB') || error.message.startsWith('EPUB contains')) {
+      throw error;
+    }
+    throw new Error('Failed to parse EPUB file: ' + (error.message || 'Unknown error'));
   }
 }
 
