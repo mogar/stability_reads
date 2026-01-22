@@ -4,14 +4,10 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 ## UI Improvements
 
-- [ ] **Table of Contents and Navigation**
-  Add a Table of Contents view for the active book. Allow the user to select a chapter from the TOC and update the current reading position to the start of that chapter.
-
 ## Errors and Bugs
 
-- [x] **Imported files are not persisted to app storage**  
-  The `filepath` in documents is set to an empty string with a TODO comment. Files imported via file picker aren't copied to Capacitor's internal storage, so they may not persist across app updates or if the original file is deleted.  
-  *Fix*: Use `@capacitor/filesystem` to copy files to `dataDirectory` during import, update `filepath`, and load from there instead of re-parsing on open.
+- [ ] **Table of Contents navigation error**
+  When a new chapter is selected from the Table of Contents modal. The normal reading view doesn't go to the correct page.
 
 ## Security Vulnerabilities
 
@@ -47,7 +43,6 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 ## Additional Recommendations
 
-- [x] **Error Handling and UX**: Add user-facing error messages (e.g., via alerts or a status div) for import failures, parsing errors, and file access issues. Implement loading spinners during import/parsing.
 - [ ] **Testing and Validation**: Test on various Android devices for performance. Add unit tests for parsing functions using a framework like Jest.
 - [ ] **Build and Deployment**: Ensure APK signing and testing before release. Update `package.json` with proper build scripts if bundling is added.
 - [ ] **Accessibility**: Add ARIA labels to buttons and ensure keyboard navigation works (e.g., for speed controls).
