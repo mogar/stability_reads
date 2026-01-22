@@ -10,6 +10,11 @@ body {
   color: #000;
 }
 
+body.night {
+  background: #000;
+  color: #fff;
+}
+
 .view {
   height: 100vh;
   display: flex;
@@ -26,6 +31,10 @@ header {
   align-items: center;
   padding: 10px;
   border-bottom: 1px solid #ccc;
+}
+
+body.night header {
+  border-color: #333;
 }
 
 .controls {
@@ -49,12 +58,20 @@ header {
   background: yellow;
 }
 
+body.night .word.highlighted {
+  background: #444;
+}
+
 footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px;
   border-top: 1px solid #ccc;
+}
+
+body.night footer {
+  border-color: #333;
 }
 
 .nav-buttons {
@@ -128,6 +145,10 @@ footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+body.night .document-item {
+  border-color: #333;
 }
 
 .delete-btn {

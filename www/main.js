@@ -195,6 +195,15 @@ async function handleFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
 
+  // Validate file type
+  const validTypes = ['text/plain', 'application/epub+zip'];
+  if (!validTypes.includes(file.type) && !file.name.endsWith('.txt') && !file.name.endsWith('.epub')) {
+    alert('Please select a valid TXT or EPUB file.');
+    return;
+  }
+
+  const data = await file.arrayBuffer();
+
   try {
     const words = await parseDocument(file);
     if (words.length === 0) {
@@ -202,7 +211,7 @@ async function handleFileSelect(event) {
     }
     const doc = {
       id: generateId(),
-      filepath: '', // TODO: copy to internal
+      filepath: '', // Will be set below
       filename: file.name,
       format: file.name.endsWith('.epub') ? 'epub' : 'txt',
       words: words,
@@ -211,13 +220,29 @@ async function handleFileSelect(event) {
       addedAt: Date.now(),
       lastAccessedAt: Date.now()
     };
+
+    // Copy file to internal storage
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem) {
+      try {
+        const result = await window.Capacitor.Plugins.Filesystem.writeFile({
+          path: `documents/${doc.id}.${doc.format}`,
+          data: data,
+          directory: window.Capacitor.Plugins.Filesystem.Directory.Data
+        });
+        doc.filepath = result.uri;
+      } catch (e) {
+        console.error('Failed to copy file to internal storage:', e);
+        // Continue without filepath
+      }
+    }
+
     await db.setItem(doc.id, doc);
     documents.push(doc);
     renderLibrary();
     fileInput.value = ''; // Reset input
   } catch (error) {
     console.error('Error importing document:', error);
-    // Optionally show a message to user, but for now just log
+    alert('Error importing document: ' + error.message);
   }
 }
 
@@ -449,7 +474,7 @@ async function parseDocument(file) {
 
 function parseTXT(content) {
   // Insert spaces around punctuation to split words properly
-  content = content.replace(/([-\u2013\u2014,.!?;:])/g, ' $1 ');
+  content = content.replace(/([,\.!?;:\u2013\u2014])/g, ' $1 ');
   let words = content.split(/\s+/).filter(word => word.length > 0);
   words = mergeTrailingPunctuation(words);
   return words;
@@ -508,14 +533,14 @@ async function parseEPUB(file) {
 
     console.log('Total fullText length:', fullText.length);
     // Insert spaces around punctuation to split words properly
-    fullText = fullText.replace(/([-\u2013\u2014,.!?;:])/g, ' $1 ');
+    fullText = fullText.replace(/([,\.!?;:\u2013\u2014])/g, ' $1 ');
     let words = fullText.split(/\s+/).filter(word => word.length > 0);
     words = mergeTrailingPunctuation(words);
     console.log('Words count:', words.length);
     return words;
   } catch (error) {
     console.error('EPUB parsing error:', error);
-    return ['EPUB', 'parsing', 'failed'];
+    throw new Error('Failed to parse EPUB file');
   }
 }
 
