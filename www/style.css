@@ -45,7 +45,6 @@ body.night header {
 #text-container {
   flex: 1;
   padding: 20px;
-  padding-bottom: 40px;
   overflow: hidden;
   line-height: 1.5;
 }

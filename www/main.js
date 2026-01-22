@@ -422,20 +422,43 @@ function renderNormalReading() {
   const textContainer = document.getElementById('text-container');
   textContainer.innerHTML = '';
 
-  // Calculate how many words fit on screen
-  wordsPerPage = calculateWordsPerPage();
+  // Calculate initial estimate
+  const estimatedWords = calculateWordsPerPage();
 
-  // Render one page starting from current position
+  // Render words and find out how many actually fit
   renderedStartIndex = readingState.currentWordIndex;
-  renderedEndIndex = Math.min(readingState.words.length, renderedStartIndex + wordsPerPage);
+  const maxWords = Math.min(readingState.words.length, renderedStartIndex + estimatedWords * 2);
 
-  for (let index = renderedStartIndex; index < renderedEndIndex; index++) {
+  const containerRect = textContainer.getBoundingClientRect();
+  const maxBottom = containerRect.bottom;
+
+  let fittingWords = 0;
+  for (let index = renderedStartIndex; index < maxWords; index++) {
     const span = document.createElement('span');
     span.className = 'word';
     span.textContent = readingState.words[index] + ' ';
     span.addEventListener('click', () => setCurrentWord(index));
     textContainer.appendChild(span);
+
+    // Check if this word is still within bounds
+    const wordRect = span.getBoundingClientRect();
+    if (wordRect.bottom > maxBottom) {
+      // This word went over the edge, remove it
+      textContainer.removeChild(span);
+      break;
+    }
+    fittingWords++;
   }
+
+  renderedEndIndex = renderedStartIndex + fittingWords;
+  wordsPerPage = fittingWords;
+
+  console.log('renderNormalReading:', {
+    renderedStartIndex,
+    renderedEndIndex,
+    fittingWords,
+    wordsPerPage
+  });
 
   updateHighlight();
   updateProgress();
@@ -443,12 +466,15 @@ function renderNormalReading() {
 
 function calculateWordsPerPage() {
   const textContainer = document.getElementById('text-container');
+
+  // Get the actual available dimensions
   const containerHeight = textContainer.clientHeight;
   const containerWidth = textContainer.clientWidth;
 
-  // Account for padding (20px top + 40px bottom)
-  const availableHeight = containerHeight - 60;
-  const availableWidth = containerWidth - 40; // Account for left/right padding
+  // Account for padding (20px on each side)
+  const availableWidth = containerWidth - 40;
+  // Account for vertical padding and ensure some margin
+  const availableHeight = containerHeight - 40;
 
   // Estimate words per line based on average word length and font size
   const avgWordLength = 6; // characters + space
@@ -460,6 +486,17 @@ function calculateWordsPerPage() {
   const linesPerPage = Math.floor(availableHeight / lineHeight);
 
   const estimated = Math.max(1, wordsPerLine * linesPerPage);
+
+  console.log('calculateWordsPerPage:', {
+    containerHeight,
+    containerWidth,
+    availableHeight,
+    availableWidth,
+    fontSize,
+    wordsPerLine,
+    linesPerPage,
+    estimated
+  });
 
   // Return a reasonable estimate
   return estimated > 0 ? estimated : 50;
