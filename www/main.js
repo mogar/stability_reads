@@ -478,6 +478,13 @@ function openDocument(doc) {
 }
 
 function switchView(view) {
+  // If leaving speed view while playing, stop playback
+  if (currentView === 'speed' && view !== 'speed' && readingState.isPlaying) {
+    readingState.isPlaying = false;
+    document.getElementById('play-pause-btn').textContent = '▶';
+    stopPlayback();
+  }
+
   currentView = view;
   libraryView.classList.toggle('hidden', view !== 'library');
   normalView.classList.toggle('hidden', view !== 'normal');
