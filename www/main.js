@@ -25,6 +25,14 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
+function debounce(func, delay) {
+  let timeoutId;
+  return function(...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+
 function mergeTrailingPunctuation(words) {
   const result = [];
   for (const word of words) {
@@ -119,22 +127,28 @@ function setupEventListeners() {
     document.body.classList.toggle('night', isNightMode);
     localStorage.setItem('nightMode', isNightMode);
   });
-  document.getElementById('font-size-down').addEventListener('click', () => {
+  // Debounced font size handlers
+  const handleFontSizeDown = debounce(() => {
     fontSize = Math.max(12, fontSize - 2);
     updateFontSize();
-  });
-  document.getElementById('font-size-up').addEventListener('click', () => {
+  }, 150);
+  const handleFontSizeUp = debounce(() => {
     fontSize = Math.min(32, fontSize + 2);
     updateFontSize();
-  });
-  document.getElementById('speed-font-size-down').addEventListener('click', () => {
+  }, 150);
+  const handleSpeedFontSizeDown = debounce(() => {
     speedFontSize = Math.max(24, speedFontSize - 4);
     updateSpeedFontSize();
-  });
-  document.getElementById('speed-font-size-up').addEventListener('click', () => {
+  }, 150);
+  const handleSpeedFontSizeUp = debounce(() => {
     speedFontSize = Math.min(72, speedFontSize + 4);
     updateSpeedFontSize();
-  });
+  }, 150);
+
+  document.getElementById('font-size-down').addEventListener('click', handleFontSizeDown);
+  document.getElementById('font-size-up').addEventListener('click', handleFontSizeUp);
+  document.getElementById('speed-font-size-down').addEventListener('click', handleSpeedFontSizeDown);
+  document.getElementById('speed-font-size-up').addEventListener('click', handleSpeedFontSizeUp);
 
   // Speed view
   document.getElementById('back-to-library-speed').addEventListener('click', async () => {
@@ -151,7 +165,7 @@ function setupEventListeners() {
   });
   document.getElementById('play-pause-btn').addEventListener('click', togglePlayPause);
   document.getElementById('reset-btn').addEventListener('click', resetReading);
-  document.getElementById('speed-slider').addEventListener('input', updateSpeed);
+  document.getElementById('speed-slider').addEventListener('input', debounce(updateSpeed, 100));
   document.getElementById('auto-pace-toggle').addEventListener('change', toggleAutoPace);
 }
 
