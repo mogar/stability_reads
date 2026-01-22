@@ -178,3 +178,104 @@ body.night {
 body.night .word.highlighted {
   background: #444;
 }
+
+/* Table of Contents Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal.hidden {
+  display: none !important;
+}
+
+.modal-content {
+  background: #fff;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+body.night .modal-content {
+  background: #222;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #ccc;
+}
+
+body.night .modal-header {
+  border-color: #444;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+#close-toc {
+  background: none;
+  border: none;
+  font-size: 36px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 5px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#toc-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+
+.toc-item {
+  padding: 12px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+body.night .toc-item {
+  border-color: #333;
+}
+
+.toc-item:hover {
+  background: #f5f5f5;
+}
+
+body.night .toc-item:hover {
+  background: #333;
+}
+
+.toc-item-title {
+  font-weight: 500;
+}
+
+.toc-item-progress {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 4px;
+}
+
+body.night .toc-item-progress {
+  color: #aaa;
+}

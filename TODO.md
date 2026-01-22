@@ -4,11 +4,8 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 ## UI Improvements
 
-- [ ] **Paging forward and backward in normal view**
-  Swiping right or left should advance the book by one screen's worth of words. In normal reading view, a user should be able to read the entire book just by swiping.
-
-- [ ] **Advancing forward and backward in speed view**
-  Swiping right or left should advance the word displayed in speed reading mode.
+- [ ] **Table of Contents and Navigation**
+  Add a Table of Contents view for the active book. Allow the user to select a chapter from the TOC and update the current reading position to the start of that chapter.
 
 ## Errors and Bugs
 

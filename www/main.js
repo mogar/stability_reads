@@ -79,6 +79,9 @@ async function init() {
   speedFontSize = parseInt(localStorage.getItem('speedFontSize')) || 48;
   applyUIState();
 
+  // Ensure TOC modal is hidden on load
+  document.getElementById('toc-modal').classList.add('hidden');
+
   await loadDocuments();
   renderLibrary();
   setupEventListeners();
@@ -130,6 +133,31 @@ function setupEventListeners() {
     isNightMode = !isNightMode;
     document.body.classList.toggle('night', isNightMode);
     localStorage.setItem('nightMode', isNightMode);
+  });
+  document.getElementById('menu-btn').addEventListener('click', (e) => {
+    e.preventDefault();
+    openTOC();
+  });
+  document.getElementById('close-toc').addEventListener('click', (e) => {
+    e.preventDefault();
+    closeTOC();
+  });
+
+  // Close TOC when clicking outside modal content
+  document.getElementById('toc-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('toc-modal')) {
+      closeTOC();
+    }
+  });
+
+  // Close TOC with escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('toc-modal');
+      if (modal && !modal.classList.contains('hidden')) {
+        closeTOC();
+      }
+    }
   });
   // Debounced font size handlers
   const handleFontSizeDown = debounce(() => {
@@ -350,7 +378,10 @@ async function handleFileSelect(event) {
   const data = await file.arrayBuffer();
 
   try {
-    const words = await parseDocument(file);
+    const parseResult = await parseDocument(file);
+    const words = parseResult.words || parseResult;
+    const toc = parseResult.toc || null;
+
     if (words.length === 0) {
       throw new Error('No words found in document');
     }
@@ -360,6 +391,7 @@ async function handleFileSelect(event) {
       filename: file.name,
       format: file.name.endsWith('.epub') ? 'epub' : 'txt',
       words: words,
+      toc: toc,
       lastReadPosition: 0,
       totalWords: words.length,
       addedAt: Date.now(),
@@ -677,7 +709,19 @@ function parseTXT(content) {
   content = content.replace(/([,\.!?;:\u2013\u2014])/g, ' $1 ');
   let words = content.split(/\s+/).filter(word => word.length > 0);
   words = mergeTrailingPunctuation(words);
-  return words;
+
+  // Generate percentage-based bookmarks for TXT files
+  const toc = [];
+  const percentages = [0, 25, 50, 75, 100];
+  for (const pct of percentages) {
+    const wordIndex = Math.floor((pct / 100) * words.length);
+    toc.push({
+      title: `${pct}%`,
+      wordIndex: Math.min(wordIndex, words.length - 1)
+    });
+  }
+
+  return { words, toc };
 }
 
 async function parseEPUB(file) {
@@ -731,6 +775,7 @@ async function parseEPUB(file) {
     let fullText = '';
     let successfulChapters = 0;
     let failedChapters = 0;
+    const chapters = []; // Track chapters for TOC
 
     for (const itemref of spine) {
       const id = itemref.getAttribute('idref');
@@ -749,6 +794,31 @@ async function parseEPUB(file) {
           const htmlDoc = parser.parseFromString(htmlText, 'text/html');
           const text = htmlDoc.body ? htmlDoc.body.textContent : '';
           console.log('Text length:', text.length);
+
+          // Track chapter start position
+          const chapterStartPos = fullText.length;
+
+          // Try to extract chapter title
+          let chapterTitle = '';
+          const h1 = htmlDoc.querySelector('h1');
+          const h2 = htmlDoc.querySelector('h2');
+          const title = htmlDoc.querySelector('title');
+          if (h1 && h1.textContent.trim()) {
+            chapterTitle = h1.textContent.trim();
+          } else if (h2 && h2.textContent.trim()) {
+            chapterTitle = h2.textContent.trim();
+          } else if (title && title.textContent.trim()) {
+            chapterTitle = title.textContent.trim();
+          } else {
+            chapterTitle = `Chapter ${successfulChapters + 1}`;
+          }
+
+          chapters.push({
+            title: chapterTitle,
+            textStartPos: chapterStartPos,
+            href: href
+          });
+
           fullText += text + ' ';
           successfulChapters++;
         } catch (e) {
@@ -771,6 +841,22 @@ async function parseEPUB(file) {
     words = mergeTrailingPunctuation(words);
     console.log('Words count:', words.length);
 
+    // Build TOC with word indices
+    const toc = chapters.map(chapter => {
+      // Count words up to this chapter's start position
+      const textUpToChapter = fullText.substring(0, chapter.textStartPos);
+      const processedText = textUpToChapter.replace(/([,\.!?;:\u2013\u2014])/g, ' $1 ');
+      const wordsUpToChapter = processedText.split(/\s+/).filter(word => word.length > 0);
+      const wordIndex = mergeTrailingPunctuation(wordsUpToChapter).length;
+
+      return {
+        title: chapter.title,
+        wordIndex: Math.min(wordIndex, words.length - 1)
+      };
+    });
+
+    console.log('TOC entries:', toc.length);
+
     // Warn user if some chapters failed but we got some content
     if (failedChapters > 0 && successfulChapters > 0) {
       setTimeout(() => {
@@ -778,7 +864,7 @@ async function parseEPUB(file) {
       }, 500);
     }
 
-    return words;
+    return { words, toc };
   } catch (error) {
     console.error('EPUB parsing error:', error);
     // Re-throw with user-friendly message if we have one, otherwise use generic message
@@ -823,5 +909,64 @@ async function saveReadingState() {
       const progressText = `${progress}% • ${currentDocument.lastReadPosition}/${currentDocument.totalWords} words`;
       item.children[1].textContent = progressText;
     }
+  }
+}
+
+function openTOC() {
+  if (!currentDocument || !currentDocument.toc || currentDocument.toc.length === 0) {
+    alert('No table of contents available for this document.');
+    return;
+  }
+
+  renderTOC();
+  document.getElementById('toc-modal').classList.remove('hidden');
+}
+
+function closeTOC() {
+  const modal = document.getElementById('toc-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+  }
+}
+
+function renderTOC() {
+  const tocList = document.getElementById('toc-list');
+  tocList.innerHTML = '';
+
+  if (!currentDocument.toc) return;
+
+  currentDocument.toc.forEach((item) => {
+    const tocItem = document.createElement('div');
+    tocItem.className = 'toc-item';
+
+    const title = document.createElement('div');
+    title.className = 'toc-item-title';
+    title.textContent = item.title;
+
+    const progress = document.createElement('div');
+    progress.className = 'toc-item-progress';
+    const percentage = Math.round((item.wordIndex / currentDocument.totalWords) * 100);
+    progress.textContent = `${percentage}% • Word ${item.wordIndex + 1}`;
+
+    tocItem.appendChild(title);
+    tocItem.appendChild(progress);
+
+    tocItem.addEventListener('click', () => {
+      jumpToChapter(item.wordIndex);
+    });
+
+    tocList.appendChild(tocItem);
+  });
+}
+
+function jumpToChapter(wordIndex) {
+  readingState.currentWordIndex = wordIndex;
+  closeTOC();
+
+  // Update the appropriate view
+  if (currentView === 'normal') {
+    renderNormalReading();
+  } else if (currentView === 'speed') {
+    renderSpeedReading();
   }
 }
