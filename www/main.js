@@ -167,6 +167,9 @@ function setupEventListeners() {
   document.getElementById('reset-btn').addEventListener('click', resetReading);
   document.getElementById('speed-slider').addEventListener('input', debounce(updateSpeed, 100));
   document.getElementById('auto-pace-toggle').addEventListener('change', toggleAutoPace);
+
+  // Allow tapping the reading area to play/pause
+  document.getElementById('rsvp-container').addEventListener('click', togglePlayPause);
 }
 
 async function loadDocuments() {
