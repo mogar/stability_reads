@@ -170,6 +170,73 @@ function setupEventListeners() {
 
   // Allow tapping the reading area to play/pause
   document.getElementById('rsvp-container').addEventListener('click', togglePlayPause);
+
+  // Swipe gestures for speed reading navigation
+  setupSwipeGestures();
+}
+
+function setupSwipeGestures() {
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchStartTime = 0;
+  const swipeThreshold = 50; // Minimum distance for a swipe
+  const tapThreshold = 10; // Maximum movement for a tap
+  const timeThreshold = 300; // Maximum time for a tap (ms)
+
+  const rsvpContainer = document.getElementById('rsvp-container');
+
+  rsvpContainer.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchStartTime = Date.now();
+  }, { passive: true });
+
+  rsvpContainer.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const touchEndTime = Date.now();
+
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    const deltaTime = touchEndTime - touchStartTime;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    // Check if this is a tap (small movement, quick)
+    if (distance < tapThreshold && deltaTime < timeThreshold) {
+      // Let the click handler deal with it
+      return;
+    }
+
+    // Check if this is a horizontal swipe
+    if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
+      // Prevent the click event from firing
+      e.preventDefault();
+
+      if (deltaX > 0) {
+        // Swipe right - go to previous word
+        goToPreviousWord();
+      } else {
+        // Swipe left - go to next word
+        goToNextWord();
+      }
+    }
+  });
+}
+
+function goToPreviousWord() {
+  if (readingState.currentWordIndex > 0) {
+    readingState.currentWordIndex--;
+    updateWordDisplay();
+    updateProgressSpeed();
+  }
+}
+
+function goToNextWord() {
+  if (readingState.currentWordIndex < readingState.words.length - 1) {
+    readingState.currentWordIndex++;
+    updateWordDisplay();
+    updateProgressSpeed();
+  }
 }
 
 async function loadDocuments() {
