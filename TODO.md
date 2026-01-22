@@ -2,15 +2,15 @@
 
 This file documents identified errors, security vulnerabilities, performance issues, and suggested fixes for the Stability Reads Capacitor Android app.
 
+## UI Improvements
+
+- [ ] **Paging forward and backward in normal view**
+  Swiping right or left should advance the book by one screen's worth of words. In normal reading view, a user should be able to read the entire book just by swiping.
+
+- [ ] **Advancing forward and backward in speed view**
+  Swiping right or left should advance the word displayed in speed reading mode.
+
 ## Errors and Bugs
-
-- [x] **Night mode toggle has no visual effect**  
-  The code toggles the `night` class on `body`, but `style.css` has no styles defined for `.night` (e.g., dark background/colors).  
-  *Fix*: Add CSS rules for `.night` in `style.css`, such as `body.night { background: #000; color: #fff; }` and adjust other elements accordingly.
-
-- [x] **Hyphenated words are incorrectly split during parsing**  
-  In `parseTXT`, punctuation replacement adds spaces around hyphens, causing "well-known" to split into "well-" and "known". The `mergeTrailingPunctuation` function doesn't handle intra-word hyphens properly.  
-  *Fix*: Modify `parseTXT` to avoid splitting on hyphens unless they are word boundaries (e.g., use a regex that preserves hyphenated compounds). Alternatively, implement proper tokenization logic as outlined in the design doc.
 
 - [x] **Imported files are not persisted to app storage**  
   The `filepath` in documents is set to an empty string with a TODO comment. Files imported via file picker aren't copied to Capacitor's internal storage, so they may not persist across app updates or if the original file is deleted.  
