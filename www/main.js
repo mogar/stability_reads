@@ -123,6 +123,10 @@ function setupEventListeners() {
     fontSize = Math.max(12, fontSize - 2);
     updateFontSize();
   });
+  document.getElementById('font-size-up').addEventListener('click', () => {
+    fontSize = Math.min(32, fontSize + 2);
+    updateFontSize();
+  });
   document.getElementById('speed-font-size-down').addEventListener('click', () => {
     speedFontSize = Math.max(24, speedFontSize - 4);
     updateSpeedFontSize();
