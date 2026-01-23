@@ -12,10 +12,6 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 ## Security Vulnerabilities
 
-- [ ] **No file size validation on import** ([main.js:422](www/main.js#L422))
-  Files are read entirely into memory without checking their size. A maliciously large file (multi-GB EPUB) could cause memory exhaustion or app crash.
-  *Fix*: Add a file size check (e.g., reject files over 50MB) before reading.
-
 - [ ] **Debug console.log statements expose file content** ([main.js:776](www/main.js#L776), [784](www/main.js#L784), [791](www/main.js#L791), [803](www/main.js#L803), [807](www/main.js#L807), [821](www/main.js#L821), [831](www/main.js#L831), [836](www/main.js#L836), [878-879](www/main.js#L878), [885](www/main.js#L885))
   Multiple `console.log` statements output EPUB content during parsing. This could expose document content in production logs or debugging tools.
   *Fix*: Remove or wrap in a debug flag that's disabled in production builds.

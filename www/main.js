@@ -430,6 +430,13 @@ async function handleFileSelect(event) {
     return;
   }
 
+  // Validate file size (max 50MB)
+  const maxSizeBytes = 50 * 1024 * 1024;
+  if (file.size > maxSizeBytes) {
+    alert('File is too large. Maximum size is 50MB.');
+    return;
+  }
+
   const data = await file.arrayBuffer();
 
   try {
