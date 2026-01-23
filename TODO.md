@@ -19,10 +19,6 @@ This file documents identified errors, security vulnerabilities, performance iss
   Entire word arrays are stored in memory (`readingState.words` and `doc.words`). For long books (e.g., 100k+ words), this consumes significant RAM, potentially causing crashes on memory-constrained devices.
   *Fix*: Implement lazy loading or pagination for words—only load chunks around the current position. Store parsed words in IndexedDB instead of memory.
 
-- [ ] **No debounce/throttle on swipe navigation** ([main.js:256](www/main.js#L256), [290](www/main.js#L290))
-  Swipe gesture handlers immediately trigger page/word navigation. Rapid swipes can queue up many navigation calls and re-renders.
-  *Fix*: Add throttling to prevent more than one navigation per ~100ms.
-
 ## Code Quality / Maintainability
 
 - [ ] **Single 999-line file with global state** ([main.js](www/main.js))

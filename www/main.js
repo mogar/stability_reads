@@ -36,6 +36,17 @@ function debounce(func, delay) {
   };
 }
 
+function throttle(func, delay) {
+  let lastCall = 0;
+  return function(...args) {
+    const now = Date.now();
+    if (now - lastCall >= delay) {
+      lastCall = now;
+      func.apply(this, args);
+    }
+  };
+}
+
 function mergeTrailingPunctuation(words) {
   const result = [];
   for (const word of words) {
@@ -278,6 +289,10 @@ function setupNormalViewSwipeGestures() {
   let touchStartY = 0;
   const swipeThreshold = 50; // Minimum distance for a swipe
 
+  // Throttle page navigation to prevent rapid swipes
+  const throttledPrevPage = throttle(goToPreviousPage, 150);
+  const throttledNextPage = throttle(goToNextPage, 150);
+
   const textContainer = document.getElementById('text-container');
 
   textContainer.addEventListener('touchstart', (e) => {
@@ -298,10 +313,10 @@ function setupNormalViewSwipeGestures() {
 
       if (deltaX > 0) {
         // Swipe right - go to previous page
-        goToPreviousPage();
+        throttledPrevPage();
       } else {
         // Swipe left - go to next page
-        goToNextPage();
+        throttledNextPage();
       }
     }
   });
@@ -314,6 +329,10 @@ function setupSwipeGestures() {
   const swipeThreshold = 50; // Minimum distance for a swipe
   const tapThreshold = 10; // Maximum movement for a tap
   const timeThreshold = 300; // Maximum time for a tap (ms)
+
+  // Throttle word navigation to prevent rapid swipes
+  const throttledPrevWord = throttle(goToPreviousWord, 100);
+  const throttledNextWord = throttle(goToNextWord, 100);
 
   const rsvpContainer = document.getElementById('rsvp-container');
 
@@ -346,10 +365,10 @@ function setupSwipeGestures() {
 
       if (deltaX > 0) {
         // Swipe right - go to previous word
-        goToPreviousWord();
+        throttledPrevWord();
       } else {
         // Swipe left - go to next word
-        goToNextWord();
+        throttledNextWord();
       }
     }
   });
