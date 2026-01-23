@@ -6,18 +6,11 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 ## Errors and Bugs
 
-- [ ] **Table of Contents navigation error**
-  When a new chapter is selected from the Table of Contents modal. The normal reading view doesn't go to the correct page.
-
 ## Security Vulnerabilities
 
 - [ ] **Potential XSS via file content in speed reading display**  
   Although files are treated as plain text, if a malicious TXT file contains HTML-like content, and if future changes allow HTML rendering, it could lead to XSS. Currently, `innerHTML` is used safely for controlled word display, but file content is not sanitized.  
   *Fix*: Sanitize file content on import using a library like DOMPurify (add as dependency) or ensure all text rendering uses `textContent` instead of `innerHTML`.
-
-- [x] **No file type validation beyond extension**  
-  File input accepts `.txt,.epub`, but doesn't validate MIME types or content. A renamed malicious file could be processed.  
-  *Fix*: Check `file.type` (e.g., 'text/plain' for TXT) before processing, and reject invalid types.
 
 - [ ] **CDN script loading over HTTP (potential MITM)**  
   Scripts for JSZip, epubjs, and localforage are loaded from `https://cdn.jsdelivr.net`, which is secure, but if the CDN is compromised, it could inject malicious code.  

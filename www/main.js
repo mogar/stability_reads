@@ -369,9 +369,12 @@ async function loadDocuments() {
 }
 
 function renderLibrary() {
-  documentList.innerHTML = '';
+  documentList.textContent = '';
   if (documents.length === 0) {
-    documentList.innerHTML = '<div class="empty-state">No documents yet. Tap + to import.</div>';
+    const emptyState = document.createElement('div');
+    emptyState.className = 'empty-state';
+    emptyState.textContent = 'No documents yet. Tap + to import.';
+    documentList.appendChild(emptyState);
     return;
   }
   documents.forEach(doc => {
@@ -380,17 +383,26 @@ function renderLibrary() {
     item.setAttribute('data-doc-id', doc.id);
     const progress = Math.round((doc.lastReadPosition / doc.totalWords) * 100);
     const progressText = `${progress}% • ${doc.lastReadPosition}/${doc.totalWords} words`;
-    item.innerHTML = `
-      <div>${doc.filename}</div>
-      <div>${progressText}</div>
-      <button class="delete-btn">🗑️</button>
-    `;
+
+    const filenameDiv = document.createElement('div');
+    filenameDiv.textContent = doc.filename;
+
+    const progressDiv = document.createElement('div');
+    progressDiv.textContent = progressText;
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = '🗑️';
+
+    item.appendChild(filenameDiv);
+    item.appendChild(progressDiv);
+    item.appendChild(deleteBtn);
+
     item.addEventListener('click', (e) => {
       if (!e.target.classList.contains('delete-btn')) {
         openDocument(doc);
       }
     });
-    const deleteBtn = item.querySelector('.delete-btn');
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       deleteDocument(doc.id);
@@ -605,7 +617,25 @@ function updateWordDisplay() {
   const before = word.substring(0, orpIndex);
   const red = word[orpIndex] || '';
   const after = word.substring(orpIndex + 1);
-  display.innerHTML = `<span class="before">${before}</span><span class="red">${red}</span><span class="after">${after}</span>`;
+
+  // Use textContent instead of innerHTML to prevent XSS
+  display.textContent = '';
+
+  const beforeSpan = document.createElement('span');
+  beforeSpan.className = 'before';
+  beforeSpan.textContent = before;
+
+  const redSpan = document.createElement('span');
+  redSpan.className = 'red';
+  redSpan.textContent = red;
+
+  const afterSpan = document.createElement('span');
+  afterSpan.className = 'after';
+  afterSpan.textContent = after;
+
+  display.appendChild(beforeSpan);
+  display.appendChild(redSpan);
+  display.appendChild(afterSpan);
 }
 
 function updateProgressSpeed() {
