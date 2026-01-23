@@ -22,13 +22,8 @@ This file documents identified errors, security vulnerabilities, performance iss
   The render window (200 words) is recalculated on every word click, and DOM is rebuilt. For frequent clicks, this could be slow.  
   *Fix*: Cache rendered elements and update only changed parts. Use a virtual scroller library if needed.
 
-- [ ] **No throttling on UI interactions**  
-  Rapid clicks (e.g., font size buttons) trigger immediate updates without debouncing, potentially overwhelming the main thread.  
-  *Fix*: Add debouncing (e.g., using Lodash or custom) to buttons like font size controls.
-
 ## Additional Recommendations
 
 - [ ] **Testing and Validation**: Test on various Android devices for performance. Add unit tests for parsing functions using a framework like Jest.
 - [ ] **Build and Deployment**: Ensure APK signing and testing before release. Update `package.json` with proper build scripts if bundling is added.
-- [ ] **Accessibility**: Add ARIA labels to buttons and ensure keyboard navigation works (e.g., for speed controls).
 - [ ] **Dependencies**: Audit for vulnerabilities using `npm audit`. Consider updating to latest versions of Capacitor and libraries.

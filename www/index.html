@@ -12,7 +12,7 @@
     <div id="library-view" class="view">
       <header>
         <h1>My Documents</h1>
-        <button id="import-btn">+</button>
+        <button id="import-btn" aria-label="Import document">+</button>
       </header>
       <div id="document-list">
         <!-- Documents will be listed here -->
@@ -21,12 +21,12 @@
 
     <div id="normal-view" class="view hidden">
       <header>
-        <button id="back-to-library">←</button>
+        <button id="back-to-library" aria-label="Back to library">←</button>
         <div class="controls">
-          <button id="menu-btn">︙</button>
-          <button id="night-mode-btn">🌙</button>
-          <button id="font-size-down">A-</button>
-          <button id="font-size-up">A+</button>
+          <button id="menu-btn" aria-label="Table of contents">︙</button>
+          <button id="night-mode-btn" aria-label="Toggle night mode">🌙</button>
+          <button id="font-size-down" aria-label="Decrease font size">A-</button>
+          <button id="font-size-up" aria-label="Increase font size">A+</button>
         </div>
       </header>
       <div id="text-container">
@@ -43,10 +43,10 @@
 
     <div id="speed-view" class="view hidden">
       <header>
-        <button id="back-to-library-speed">←</button>
+        <button id="back-to-library-speed" aria-label="Back to library">←</button>
         <div class="controls">
-          <button id="speed-font-size-down">A-</button>
-          <button id="speed-font-size-up">A+</button>
+          <button id="speed-font-size-down" aria-label="Decrease font size">A-</button>
+          <button id="speed-font-size-up" aria-label="Increase font size">A+</button>
         </div>
         <button id="reset-btn">Reset</button>
       </header>
@@ -56,7 +56,7 @@
         </div>
       </div>
       <div class="speed-controls">
-        <input type="range" id="speed-slider" min="120" max="900" value="300">
+        <input type="range" id="speed-slider" min="120" max="900" value="300" aria-label="Reading speed">
         <div class="speed-labels">
           <span>120</span>
           <span>900 WPM</span>
@@ -69,7 +69,7 @@
       <footer>
         <span id="progress-speed">0% • Word 0/0</span>
         <div class="nav-buttons">
-          <button id="play-pause-btn">▶</button>
+          <button id="play-pause-btn" aria-label="Play or pause">▶</button>
           <button id="to-library-speed">Library</button>
           <button id="to-normal">Normal</button>
         </div>
@@ -81,7 +81,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2>Table of Contents</h2>
-          <button id="close-toc">×</button>
+          <button id="close-toc" aria-label="Close">×</button>
         </div>
         <div id="toc-list">
           <!-- TOC items will be listed here -->
