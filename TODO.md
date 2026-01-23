@@ -6,10 +6,6 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 ## Errors and Bugs
 
-- [ ] **Operator precedence bug in error handling** ([main.js:898](www/main.js#L898))
-  The condition `error.message && error.message.startsWith('Invalid EPUB') || error.message.startsWith('EPUB contains')` has incorrect precedence—the `||` binds looser than `&&`, so the second `startsWith` runs even when `error.message` is undefined.
-  *Fix*: Add parentheses: `error.message && (error.message.startsWith('Invalid EPUB') || error.message.startsWith('EPUB contains'))`.
-
 - [ ] **Capacitor Filesystem Directory enum access** ([main.js:462](www/main.js#L462))
   `window.Capacitor.Plugins.Filesystem.Directory.Data` may not be the correct way to access the Directory enum in Capacitor 6. Should use the imported enum from @capacitor/filesystem.
   *Fix*: Import `Directory` from `@capacitor/filesystem` and use `Directory.Data`.

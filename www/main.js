@@ -898,7 +898,7 @@ async function parseEPUB(file) {
   } catch (error) {
     console.error('EPUB parsing error:', error);
     // Re-throw with user-friendly message if we have one, otherwise use generic message
-    if (error.message && error.message.startsWith('Invalid EPUB') || error.message.startsWith('EPUB contains')) {
+    if (error.message && (error.message.startsWith('Invalid EPUB') || error.message.startsWith('EPUB contains'))) {
       throw error;
     }
     throw new Error('Failed to parse EPUB file: ' + (error.message || 'Unknown error'));
