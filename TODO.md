@@ -6,10 +6,6 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 ## Errors and Bugs
 
-- [ ] **Multiple playback intervals possible** ([main.js:643](www/main.js#L643))
-  `startPlayback()` creates a new interval without checking if one already exists. Calling it multiple times could create multiple concurrent intervals.
-  *Fix*: Call `stopPlayback()` at the start of `startPlayback()` or check if `playbackInterval` is already set.
-
 - [ ] **Operator precedence bug in error handling** ([main.js:898](www/main.js#L898))
   The condition `error.message && error.message.startsWith('Invalid EPUB') || error.message.startsWith('EPUB contains')` has incorrect precedence—the `||` binds looser than `&&`, so the second `startsWith` runs even when `error.message` is undefined.
   *Fix*: Add parentheses: `error.message && (error.message.startsWith('Invalid EPUB') || error.message.startsWith('EPUB contains'))`.

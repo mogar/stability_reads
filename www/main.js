@@ -643,6 +643,7 @@ function togglePlayPause() {
 let playbackInterval;
 
 function startPlayback() {
+  stopPlayback(); // Clear any existing interval first
   const delay = calculateDelay();
   playbackInterval = setInterval(() => {
     readingState.currentWordIndex++;
