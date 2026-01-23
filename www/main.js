@@ -106,6 +106,11 @@ const documentList = document.getElementById('document-list');
 const importBtn = document.getElementById('import-btn');
 const fileInput = document.getElementById('file-input');
 
+// Cached speed reading display elements (for performance)
+const wordBeforeSpan = document.getElementById('word-before');
+const wordRedSpan = document.getElementById('word-red');
+const wordAfterSpan = document.getElementById('word-after');
+
 // Initialize app
 async function init() {
   // Load UI preferences
@@ -609,7 +614,6 @@ function renderSpeedReading() {
 
 function updateWordDisplay() {
   const word = readingState.words[readingState.currentWordIndex] || '';
-  const display = document.getElementById('word-display');
   // Calculate ORP index: closest to 1/3 of the way into the word
   let orpIndex = Math.round((word.length - 1) / 3);
   if (word.length === 2) orpIndex = 1; // For 2-letter words, choose the last letter
@@ -618,24 +622,10 @@ function updateWordDisplay() {
   const red = word[orpIndex] || '';
   const after = word.substring(orpIndex + 1);
 
-  // Use textContent instead of innerHTML to prevent XSS
-  display.textContent = '';
-
-  const beforeSpan = document.createElement('span');
-  beforeSpan.className = 'before';
-  beforeSpan.textContent = before;
-
-  const redSpan = document.createElement('span');
-  redSpan.className = 'red';
-  redSpan.textContent = red;
-
-  const afterSpan = document.createElement('span');
-  afterSpan.className = 'after';
-  afterSpan.textContent = after;
-
-  display.appendChild(beforeSpan);
-  display.appendChild(redSpan);
-  display.appendChild(afterSpan);
+  // Update cached span elements (no DOM creation needed)
+  wordBeforeSpan.textContent = before;
+  wordRedSpan.textContent = red;
+  wordAfterSpan.textContent = after;
 }
 
 function updateProgressSpeed() {

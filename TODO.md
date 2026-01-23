@@ -8,10 +8,6 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 ## Security Vulnerabilities
 
-- [ ] **Potential XSS via file content in speed reading display**  
-  Although files are treated as plain text, if a malicious TXT file contains HTML-like content, and if future changes allow HTML rendering, it could lead to XSS. Currently, `innerHTML` is used safely for controlled word display, but file content is not sanitized.  
-  *Fix*: Sanitize file content on import using a library like DOMPurify (add as dependency) or ensure all text rendering uses `textContent` instead of `innerHTML`.
-
 - [ ] **CDN script loading over HTTP (potential MITM)**  
   Scripts for JSZip, epubjs, and localforage are loaded from `https://cdn.jsdelivr.net`, which is secure, but if the CDN is compromised, it could inject malicious code.  
   *Fix*: Bundle dependencies locally using a bundler like Webpack or Vite to avoid external loading. Update `package.json` scripts and build process accordingly.
