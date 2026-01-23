@@ -635,7 +635,6 @@ function updateProgressSpeed() {
 
 function updateSpeedDisplay() {
   document.getElementById('current-wpm').textContent = `Current: ${readingState.speedWPM} WPM`;
-  document.getElementById('speed-slider').value = readingState.speedWPM;
 }
 
 function togglePlayPause() {
@@ -697,10 +696,8 @@ function resetReading() {
 function updateSpeed(event) {
   const newSpeed = parseInt(event.target.value);
   if (readingState.autoPaceEnabled && readingState.isPlaying) {
-    // Calculate current WPM for smooth transition
-    const progress = Math.min((readingState.currentWordIndex - readingState.autoPaceStartWordIndex) / readingState.autoPaceDurationWords, 1);
-    const currentWpm = readingState.autoPaceStartWPM + (readingState.targetSpeedWPM - readingState.autoPaceStartWPM) * progress;
-    readingState.autoPaceStartWPM = currentWpm;
+    // User-initiated speed changes take effect immediately
+    readingState.autoPaceStartWPM = newSpeed;
     readingState.autoPaceStartWordIndex = readingState.currentWordIndex;
   }
   readingState.speedWPM = newSpeed;

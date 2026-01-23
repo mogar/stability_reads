@@ -14,10 +14,6 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 ## Performance Issues
 
-- [ ] **DOM updates in speed reading may cause lag on low-end devices**  
-  At high WPM (e.g., 900), the DOM is updated ~15 times/second via `innerHTML` and style changes. On slower Android devices, this could cause stuttering or dropped frames.  
-  *Fix*: Optimize by batching updates, using `requestAnimationFrame`, or pre-rendering words into a buffer. Consider using Canvas for rendering instead of DOM manipulation.
-
 - [ ] **Memory usage for large documents**  
   Entire word arrays are stored in memory (`readingState.words` and `doc.words`). For long books (e.g., 100k+ words), this consumes significant RAM, potentially causing crashes on memory-constrained devices.  
   *Fix*: Implement lazy loading or pagination for words—only load chunks around the current position. Store parsed words in IndexedDB instead of memory.
