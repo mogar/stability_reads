@@ -629,12 +629,16 @@ function togglePlayPause() {
   }
 }
 
-let playbackInterval;
+let playbackTimeout;
 
 function startPlayback() {
-  stopPlayback(); // Clear any existing interval first
+  stopPlayback(); // Clear any existing timeout first
+  scheduleNextWord();
+}
+
+function scheduleNextWord() {
   const delay = calculateDelay();
-  playbackInterval = setInterval(() => {
+  playbackTimeout = setTimeout(() => {
     readingState.currentWordIndex++;
     if (readingState.currentWordIndex >= readingState.words.length) {
       readingState.currentWordIndex = readingState.words.length - 1;
@@ -643,11 +647,8 @@ function startPlayback() {
       updateWordDisplay();
       updateProgressSpeed();
       updateSpeedDisplay();
-      if (readingState.autoPaceEnabled) {
-        // Restart with new delay
-        stopPlayback();
-        startPlayback();
-      }
+      // Schedule next word with fresh delay (handles auto-pace naturally)
+      scheduleNextWord();
     }
   }, delay);
 }
@@ -662,7 +663,7 @@ function calculateDelay() {
 }
 
 function stopPlayback() {
-  clearInterval(playbackInterval);
+  clearTimeout(playbackTimeout);
 }
 
 function resetReading() {
