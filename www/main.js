@@ -159,6 +159,26 @@ function setupEventListeners() {
   });
   fileInput.addEventListener('change', handleFileSelect);
 
+  // Event delegation for document list (avoids creating listeners per item)
+  documentList.addEventListener('click', (e) => {
+    const deleteBtn = e.target.closest('.delete-btn');
+    if (deleteBtn) {
+      const docItem = deleteBtn.closest('.document-item');
+      if (docItem) {
+        deleteDocument(docItem.getAttribute('data-doc-id'));
+      }
+      return;
+    }
+    const docItem = e.target.closest('.document-item');
+    if (docItem) {
+      const docId = docItem.getAttribute('data-doc-id');
+      const doc = documents.find(d => d.id === docId);
+      if (doc) {
+        openDocument(doc);
+      }
+    }
+  });
+
   // Normal view
   document.getElementById('back-to-library').addEventListener('click', async () => {
     await saveReadingState();
@@ -405,16 +425,6 @@ function renderLibrary() {
     item.appendChild(filenameDiv);
     item.appendChild(progressDiv);
     item.appendChild(deleteBtn);
-
-    item.addEventListener('click', (e) => {
-      if (!e.target.classList.contains('delete-btn')) {
-        openDocument(doc);
-      }
-    });
-    deleteBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      deleteDocument(doc.id);
-    });
     documentList.appendChild(item);
   });
 }

@@ -33,10 +33,6 @@ This file documents identified errors, security vulnerabilities, performance iss
   Hard-coded values like `50` (swipe threshold), `100` (auto-pace duration), `12`/`32` (font size limits), `24`/`72` (speed font limits), `150` (debounce delay), `120`/`900` (WPM range).
   *Fix*: Extract to named constants at the top of the file or in a config module.
 
-- [ ] **Event listeners not cleaned up in renderLibrary** ([main.js:409-417](www/main.js#L409-L417))
-  Each call to `renderLibrary()` adds click event listeners to document items. When the list is re-rendered, old DOM elements are removed but if any references were kept, listeners could leak.
-  *Fix*: Use event delegation on the parent `documentList` element instead of individual listeners.
-
 - [ ] **innerHTML used where textContent would suffice** ([main.js:493](www/main.js#L493), [961](www/main.js#L961))
   `textContainer.innerHTML = ''` and `tocList.innerHTML = ''` are used to clear content. While safe for clearing, `textContent = ''` is marginally faster and makes intent clearer.
   *Fix*: Replace with `textContent = ''` for clearing operations.
