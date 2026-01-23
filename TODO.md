@@ -25,10 +25,6 @@ This file documents identified errors, security vulnerabilities, performance iss
   All application logic is in one file with module-level global variables. This makes the code harder to test, reason about, and maintain.
   *Fix*: Refactor into modules (e.g., `storage.js`, `epub-parser.js`, `txt-parser.js`, `reading-state.js`, `views/library.js`, `views/normal.js`, `views/speed.js`).
 
-- [ ] **Magic numbers throughout the codebase**
-  Hard-coded values like `50` (swipe threshold), `100` (auto-pace duration), `12`/`32` (font size limits), `24`/`72` (speed font limits), `150` (debounce delay), `120`/`900` (WPM range).
-  *Fix*: Extract to named constants at the top of the file or in a config module.
-
 - [ ] **Debug console.log statements throughout** ([main.js](www/main.js))
   Multiple `console.log` calls used for debugging should be removed for production.
   *Fix*: Remove all debug logging or use a logging utility that can be disabled.

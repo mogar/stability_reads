@@ -1,6 +1,46 @@
 import localforage from 'localforage';
 import JSZip from 'jszip';
 
+// Constants
+const CONFIG = {
+  // Speed reading settings
+  DEFAULT_WPM: 300,
+  MIN_WPM: 120,
+  MAX_WPM: 900,
+  AUTO_PACE_START_WPM: 120,
+  AUTO_PACE_DURATION_WORDS: 100,
+
+  // Font size settings
+  DEFAULT_FONT_SIZE: 16,
+  MIN_FONT_SIZE: 12,
+  MAX_FONT_SIZE: 32,
+  FONT_SIZE_STEP: 2,
+  DEFAULT_SPEED_FONT_SIZE: 48,
+  MIN_SPEED_FONT_SIZE: 24,
+  MAX_SPEED_FONT_SIZE: 72,
+  SPEED_FONT_SIZE_STEP: 4,
+
+  // Timing (milliseconds)
+  DEBOUNCE_DELAY: 150,
+  SPEED_SLIDER_DEBOUNCE: 100,
+  PAGE_SWIPE_THROTTLE: 150,
+  WORD_SWIPE_THROTTLE: 100,
+  TAP_TIME_THRESHOLD: 300,
+
+  // Gesture thresholds (pixels)
+  SWIPE_THRESHOLD: 50,
+  TAP_THRESHOLD: 10,
+
+  // File limits
+  MAX_FILE_SIZE_MB: 50,
+
+  // Layout calculations
+  CONTAINER_PADDING: 40,
+  AVG_WORD_LENGTH: 6,
+  CHAR_WIDTH_RATIO: 0.6,
+  DEFAULT_WORDS_PER_PAGE: 50
+};
+
 // Global state
 let currentView = 'library';
 let documents = [];
@@ -10,18 +50,18 @@ let readingState = {
   currentWordIndex: 0,
   words: [],
   isPlaying: false,
-  speedWPM: 300,
-  targetSpeedWPM: 300,
+  speedWPM: CONFIG.DEFAULT_WPM,
+  targetSpeedWPM: CONFIG.DEFAULT_WPM,
   autoPaceEnabled: false,
-  autoPaceStartWPM: 120,
-  autoPaceDurationWords: 100,
+  autoPaceStartWPM: CONFIG.AUTO_PACE_START_WPM,
+  autoPaceDurationWords: CONFIG.AUTO_PACE_DURATION_WORDS,
   autoPaceStartWordIndex: 0
 };
 
 // UI state
 let isNightMode = false;
-let fontSize = 16;
-let speedFontSize = 48;
+let fontSize = CONFIG.DEFAULT_FONT_SIZE;
+let speedFontSize = CONFIG.DEFAULT_SPEED_FONT_SIZE;
 
 // Utility functions
 function generateId() {
@@ -103,7 +143,7 @@ function extractTextWithSpacing(element) {
 // Page-based rendering for normal reading
 let renderedStartIndex = 0;
 let renderedEndIndex = 0;
-let wordsPerPage = 100; // Initial estimate, will be calculated dynamically
+let wordsPerPage = CONFIG.DEFAULT_WORDS_PER_PAGE; // Initial estimate, will be calculated dynamically
 
 // Initialize localforage
 const db = localforage.createInstance({
@@ -235,21 +275,21 @@ function setupEventListeners() {
   });
   // Debounced font size handlers
   const handleFontSizeDown = debounce(() => {
-    fontSize = Math.max(12, fontSize - 2);
+    fontSize = Math.max(CONFIG.MIN_FONT_SIZE, fontSize - CONFIG.FONT_SIZE_STEP);
     updateFontSize();
-  }, 150);
+  }, CONFIG.DEBOUNCE_DELAY);
   const handleFontSizeUp = debounce(() => {
-    fontSize = Math.min(32, fontSize + 2);
+    fontSize = Math.min(CONFIG.MAX_FONT_SIZE, fontSize + CONFIG.FONT_SIZE_STEP);
     updateFontSize();
-  }, 150);
+  }, CONFIG.DEBOUNCE_DELAY);
   const handleSpeedFontSizeDown = debounce(() => {
-    speedFontSize = Math.max(24, speedFontSize - 4);
+    speedFontSize = Math.max(CONFIG.MIN_SPEED_FONT_SIZE, speedFontSize - CONFIG.SPEED_FONT_SIZE_STEP);
     updateSpeedFontSize();
-  }, 150);
+  }, CONFIG.DEBOUNCE_DELAY);
   const handleSpeedFontSizeUp = debounce(() => {
-    speedFontSize = Math.min(72, speedFontSize + 4);
+    speedFontSize = Math.min(CONFIG.MAX_SPEED_FONT_SIZE, speedFontSize + CONFIG.SPEED_FONT_SIZE_STEP);
     updateSpeedFontSize();
-  }, 150);
+  }, CONFIG.DEBOUNCE_DELAY);
 
   document.getElementById('font-size-down').addEventListener('click', handleFontSizeDown);
   document.getElementById('font-size-up').addEventListener('click', handleFontSizeUp);
@@ -274,7 +314,7 @@ function setupEventListeners() {
   });
   document.getElementById('play-pause-btn').addEventListener('click', togglePlayPause);
   document.getElementById('reset-btn').addEventListener('click', resetReading);
-  document.getElementById('speed-slider').addEventListener('input', debounce(updateSpeed, 100));
+  document.getElementById('speed-slider').addEventListener('input', debounce(updateSpeed, CONFIG.SPEED_SLIDER_DEBOUNCE));
   document.getElementById('auto-pace-toggle').addEventListener('change', toggleAutoPace);
 
   // Allow tapping the reading area to play/pause
@@ -287,11 +327,10 @@ function setupEventListeners() {
 function setupNormalViewSwipeGestures() {
   let touchStartX = 0;
   let touchStartY = 0;
-  const swipeThreshold = 50; // Minimum distance for a swipe
 
   // Throttle page navigation to prevent rapid swipes
-  const throttledPrevPage = throttle(goToPreviousPage, 150);
-  const throttledNextPage = throttle(goToNextPage, 150);
+  const throttledPrevPage = throttle(goToPreviousPage, CONFIG.PAGE_SWIPE_THROTTLE);
+  const throttledNextPage = throttle(goToNextPage, CONFIG.PAGE_SWIPE_THROTTLE);
 
   const textContainer = document.getElementById('text-container');
 
@@ -308,7 +347,7 @@ function setupNormalViewSwipeGestures() {
     const deltaY = touchEndY - touchStartY;
 
     // Check if this is a horizontal swipe
-    if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
+    if (Math.abs(deltaX) > CONFIG.SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
       e.preventDefault();
 
       if (deltaX > 0) {
@@ -326,13 +365,10 @@ function setupSwipeGestures() {
   let touchStartX = 0;
   let touchStartY = 0;
   let touchStartTime = 0;
-  const swipeThreshold = 50; // Minimum distance for a swipe
-  const tapThreshold = 10; // Maximum movement for a tap
-  const timeThreshold = 300; // Maximum time for a tap (ms)
 
   // Throttle word navigation to prevent rapid swipes
-  const throttledPrevWord = throttle(goToPreviousWord, 100);
-  const throttledNextWord = throttle(goToNextWord, 100);
+  const throttledPrevWord = throttle(goToPreviousWord, CONFIG.WORD_SWIPE_THROTTLE);
+  const throttledNextWord = throttle(goToNextWord, CONFIG.WORD_SWIPE_THROTTLE);
 
   const rsvpContainer = document.getElementById('rsvp-container');
 
@@ -353,13 +389,13 @@ function setupSwipeGestures() {
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
     // Check if this is a tap (small movement, quick)
-    if (distance < tapThreshold && deltaTime < timeThreshold) {
+    if (distance < CONFIG.TAP_THRESHOLD && deltaTime < CONFIG.TAP_TIME_THRESHOLD) {
       // Let the click handler deal with it
       return;
     }
 
     // Check if this is a horizontal swipe
-    if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
+    if (Math.abs(deltaX) > CONFIG.SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
       // Prevent the click event from firing
       e.preventDefault();
 
@@ -459,10 +495,10 @@ async function handleFileSelect(event) {
     return;
   }
 
-  // Validate file size (max 50MB)
-  const maxSizeBytes = 50 * 1024 * 1024;
+  // Validate file size
+  const maxSizeBytes = CONFIG.MAX_FILE_SIZE_MB * 1024 * 1024;
   if (file.size > maxSizeBytes) {
-    alert('File is too large. Maximum size is 50MB.');
+    alert(`File is too large. Maximum size is ${CONFIG.MAX_FILE_SIZE_MB}MB.`);
     return;
   }
 
@@ -570,14 +606,14 @@ function calculateWordsPerPage() {
   const containerHeight = textContainer.clientHeight;
   const containerWidth = textContainer.clientWidth;
 
-  // Account for padding (20px on each side)
-  const availableWidth = containerWidth - 40;
+  // Account for padding
+  const availableWidth = containerWidth - CONFIG.CONTAINER_PADDING;
   // Account for vertical padding and ensure some margin
-  const availableHeight = containerHeight - 40;
+  const availableHeight = containerHeight - CONFIG.CONTAINER_PADDING;
 
   // Estimate words per line based on average word length and font size
-  const avgWordLength = 6; // characters + space
-  const charWidth = fontSize * 0.6; // Approximate character width
+  const avgWordLength = CONFIG.AVG_WORD_LENGTH;
+  const charWidth = fontSize * CONFIG.CHAR_WIDTH_RATIO;
   const wordsPerLine = Math.floor(availableWidth / (avgWordLength * charWidth));
 
   // Estimate lines per page based on line height
@@ -587,7 +623,7 @@ function calculateWordsPerPage() {
   const estimated = Math.max(1, wordsPerLine * linesPerPage);
 
   // Return a reasonable estimate
-  return estimated > 0 ? estimated : 50;
+  return estimated > 0 ? estimated : CONFIG.DEFAULT_WORDS_PER_PAGE;
 }
 
 function setCurrentWord(index) {
@@ -649,7 +685,7 @@ function togglePlayPause() {
   if (readingState.isPlaying) {
     if (readingState.autoPaceEnabled) {
       readingState.autoPaceStartWordIndex = readingState.currentWordIndex;
-      readingState.autoPaceStartWPM = 120; // Fixed starting speed
+      readingState.autoPaceStartWPM = CONFIG.AUTO_PACE_START_WPM;
       readingState.targetSpeedWPM = readingState.speedWPM;
     }
     startPlayback();
