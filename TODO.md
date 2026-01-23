@@ -8,11 +8,6 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 ## Security Vulnerabilities
 
-- [x] **CDN script loading over HTTP (potential MITM)**
-  Scripts for JSZip, epubjs, and localforage are loaded from `https://cdn.jsdelivr.net`, which is secure, but if the CDN is compromised, it could inject malicious code.
-  *Fix*: Bundle dependencies locally using a bundler like Webpack or Vite to avoid external loading. Update `package.json` scripts and build process accordingly.
-  *Done*: Set up Vite bundler. Dependencies are now imported as ES modules and bundled locally. Build outputs to `dist/` for Capacitor.
-
 ## Performance Issues
 
 - [ ] **Memory usage for large documents**  
@@ -23,4 +18,3 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 - [ ] **Testing and Validation**: Test on various Android devices for performance. Add unit tests for parsing functions using a framework like Jest.
 - [ ] **Build and Deployment**: Ensure APK signing and testing before release. Update `package.json` with proper build scripts if bundling is added.
-- [ ] **Dependencies**: Audit for vulnerabilities using `npm audit`. Consider updating to latest versions of Capacitor and libraries.

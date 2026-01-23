@@ -25,7 +25,7 @@ The project is set up with Capacitor for hybrid mobile development. The web app 
    npm install
    ```
 
-2. Add Android platform (already done):
+2. Add Android platform:
    ```
    npx cap add android
    ```
