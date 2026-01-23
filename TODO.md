@@ -33,10 +33,6 @@ This file documents identified errors, security vulnerabilities, performance iss
   Hard-coded values like `50` (swipe threshold), `100` (auto-pace duration), `12`/`32` (font size limits), `24`/`72` (speed font limits), `150` (debounce delay), `120`/`900` (WPM range).
   *Fix*: Extract to named constants at the top of the file or in a config module.
 
-- [ ] **innerHTML used where textContent would suffice** ([main.js:493](www/main.js#L493), [961](www/main.js#L961))
-  `textContainer.innerHTML = ''` and `tocList.innerHTML = ''` are used to clear content. While safe for clearing, `textContent = ''` is marginally faster and makes intent clearer.
-  *Fix*: Replace with `textContent = ''` for clearing operations.
-
 - [ ] **Debug console.log statements throughout** ([main.js](www/main.js))
   Multiple `console.log` calls used for debugging should be removed for production.
   *Fix*: Remove all debug logging or use a logging utility that can be disabled.

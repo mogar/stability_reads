@@ -507,7 +507,7 @@ async function readFile(file) {
 
 function renderNormalReading() {
   const textContainer = document.getElementById('text-container');
-  textContainer.innerHTML = '';
+  textContainer.textContent = '';
 
   // Calculate initial estimate
   const estimatedWords = calculateWordsPerPage();
@@ -946,7 +946,7 @@ function closeTOC() {
 
 function renderTOC() {
   const tocList = document.getElementById('toc-list');
-  tocList.innerHTML = '';
+  tocList.textContent = '';
 
   if (!currentDocument.toc) return;
 
