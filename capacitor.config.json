@@ -1,5 +1,5 @@
 {
   "appId": "com.stability.reads",
   "appName": "Stability Reads",
-  "webDir": "www"
+  "webDir": "dist"
 }

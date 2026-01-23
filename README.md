@@ -35,7 +35,7 @@ The project is set up with Capacitor for hybrid mobile development. The web app 
 1. Develop the web app in `www/`.
 2. Sync web assets to native projects:
    ```
-   npx cap sync
+   npm run build && npx cap sync
    ```
 3. Run on Android device/emulator:
    ```

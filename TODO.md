@@ -8,19 +8,16 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 ## Security Vulnerabilities
 
-- [ ] **CDN script loading over HTTP (potential MITM)**  
-  Scripts for JSZip, epubjs, and localforage are loaded from `https://cdn.jsdelivr.net`, which is secure, but if the CDN is compromised, it could inject malicious code.  
+- [x] **CDN script loading over HTTP (potential MITM)**
+  Scripts for JSZip, epubjs, and localforage are loaded from `https://cdn.jsdelivr.net`, which is secure, but if the CDN is compromised, it could inject malicious code.
   *Fix*: Bundle dependencies locally using a bundler like Webpack or Vite to avoid external loading. Update `package.json` scripts and build process accordingly.
+  *Done*: Set up Vite bundler. Dependencies are now imported as ES modules and bundled locally. Build outputs to `dist/` for Capacitor.
 
 ## Performance Issues
 
 - [ ] **Memory usage for large documents**  
   Entire word arrays are stored in memory (`readingState.words` and `doc.words`). For long books (e.g., 100k+ words), this consumes significant RAM, potentially causing crashes on memory-constrained devices.  
   *Fix*: Implement lazy loading or pagination for words—only load chunks around the current position. Store parsed words in IndexedDB instead of memory.
-
-- [ ] **Inefficient virtual rendering in normal reading**  
-  The render window (200 words) is recalculated on every word click, and DOM is rebuilt. For frequent clicks, this could be slow.  
-  *Fix*: Cache rendered elements and update only changed parts. Use a virtual scroller library if needed.
 
 ## Additional Recommendations
 

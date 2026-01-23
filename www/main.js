@@ -1,3 +1,6 @@
+import localforage from 'localforage';
+import JSZip from 'jszip';
+
 // Global state
 let currentView = 'library';
 let documents = [];
@@ -92,7 +95,7 @@ let renderedEndIndex = 0;
 let wordsPerPage = 100; // Initial estimate, will be calculated dynamically
 
 // Initialize localforage
-const db = window.localforage.createInstance({
+const db = localforage.createInstance({
   name: 'StabilityReads',
   storeName: 'documents'
 });
@@ -484,23 +487,6 @@ async function readFile(file) {
   });
 }
 
-function parseDocumentFromContent(content, format) {
-  if (format === 'epub') {
-    return parseEPUB(content);
-  } else {
-    return parseTXT(content);
-  }
-}
-
-function parseTXT(text) {
-  return text.split(/\s+/).filter(word => word.length > 0);
-}
-
-async function parseEPUB(content) {
-  // TODO: Implement EPUB parsing with epubjs
-  // For now, return empty
-  return [];
-}
 
 function renderNormalReading() {
   const textContainer = document.getElementById('text-container');
@@ -779,7 +765,7 @@ function parseTXT(content) {
 async function parseEPUB(file) {
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const zip = await window.JSZip.loadAsync(arrayBuffer);
+    const zip = await JSZip.loadAsync(arrayBuffer);
 
     // Parse container.xml
     const containerFile = zip.file('META-INF/container.xml');
