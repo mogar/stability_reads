@@ -772,10 +772,10 @@ async function parseEPUB(file) {
       throw new Error('Invalid EPUB: No chapters found. The EPUB may be empty or corrupted.');
     }
 
-    let fullText = '';
+    let allWords = [];
     let successfulChapters = 0;
     let failedChapters = 0;
-    const chapters = []; // Track chapters for TOC
+    const toc = []; // Track chapters for TOC
 
     for (const itemref of spine) {
       const id = itemref.getAttribute('idref');
@@ -795,8 +795,8 @@ async function parseEPUB(file) {
           const text = htmlDoc.body ? htmlDoc.body.textContent : '';
           console.log('Text length:', text.length);
 
-          // Track chapter start position
-          const chapterStartPos = fullText.length;
+          // Track chapter start word index BEFORE adding words
+          const chapterStartWordIndex = allWords.length;
 
           // Try to extract chapter title
           let chapterTitle = '';
@@ -813,13 +813,20 @@ async function parseEPUB(file) {
             chapterTitle = `Chapter ${successfulChapters + 1}`;
           }
 
-          chapters.push({
-            title: chapterTitle,
-            textStartPos: chapterStartPos,
-            href: href
-          });
+          // Parse this chapter's text into words
+          let chapterText = text.replace(/([,\.!?;:\u2013\u2014])/g, ' $1 ');
+          let chapterWords = chapterText.split(/\s+/).filter(word => word.length > 0);
+          chapterWords = mergeTrailingPunctuation(chapterWords);
 
-          fullText += text + ' ';
+          // Only add to TOC if chapter has words
+          if (chapterWords.length > 0) {
+            toc.push({
+              title: chapterTitle,
+              wordIndex: chapterStartWordIndex
+            });
+          }
+
+          allWords = allWords.concat(chapterWords);
           successfulChapters++;
         } catch (e) {
           console.log('Error processing', href, ':', e);
@@ -828,32 +835,12 @@ async function parseEPUB(file) {
       }
     }
 
-    console.log('Total fullText length:', fullText.length);
+    console.log('Total words:', allWords.length);
     console.log('Successfully parsed chapters:', successfulChapters, 'Failed:', failedChapters);
 
-    if (fullText.trim().length === 0) {
+    if (allWords.length === 0) {
       throw new Error('EPUB contains no readable text. All chapters failed to parse or are empty.');
     }
-
-    // Insert spaces around punctuation to split words properly
-    fullText = fullText.replace(/([,\.!?;:\u2013\u2014])/g, ' $1 ');
-    let words = fullText.split(/\s+/).filter(word => word.length > 0);
-    words = mergeTrailingPunctuation(words);
-    console.log('Words count:', words.length);
-
-    // Build TOC with word indices
-    const toc = chapters.map(chapter => {
-      // Count words up to this chapter's start position
-      const textUpToChapter = fullText.substring(0, chapter.textStartPos);
-      const processedText = textUpToChapter.replace(/([,\.!?;:\u2013\u2014])/g, ' $1 ');
-      const wordsUpToChapter = processedText.split(/\s+/).filter(word => word.length > 0);
-      const wordIndex = mergeTrailingPunctuation(wordsUpToChapter).length;
-
-      return {
-        title: chapter.title,
-        wordIndex: Math.min(wordIndex, words.length - 1)
-      };
-    });
 
     console.log('TOC entries:', toc.length);
 
@@ -864,7 +851,7 @@ async function parseEPUB(file) {
       }, 500);
     }
 
-    return { words, toc };
+    return { words: allWords, toc };
   } catch (error) {
     console.error('EPUB parsing error:', error);
     // Re-throw with user-friendly message if we have one, otherwise use generic message
