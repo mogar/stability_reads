@@ -23,10 +23,6 @@ This file documents identified errors, security vulnerabilities, performance iss
   Swipe gesture handlers immediately trigger page/word navigation. Rapid swipes can queue up many navigation calls and re-renders.
   *Fix*: Add throttling to prevent more than one navigation per ~100ms.
 
-- [ ] **wordsPerPage recalculated on every render** ([main.js:496](www/main.js#L496))
-  `calculateWordsPerPage()` is called every time `renderNormalReading()` runs. This should only change on window resize or font size change.
-  *Fix*: Cache the value and only recalculate on resize events or font size changes.
-
 ## Code Quality / Maintainability
 
 - [ ] **Single 999-line file with global state** ([main.js](www/main.js))
@@ -36,10 +32,6 @@ This file documents identified errors, security vulnerabilities, performance iss
 - [ ] **Magic numbers throughout the codebase**
   Hard-coded values like `50` (swipe threshold), `100` (auto-pace duration), `12`/`32` (font size limits), `24`/`72` (speed font limits), `150` (debounce delay), `120`/`900` (WPM range).
   *Fix*: Extract to named constants at the top of the file or in a config module.
-
-- [ ] **Unused `epubjs` dependency** ([package.json:15](package.json#L15))
-  The `epubjs` package is listed as a dependency but never imported or used—the app implements its own EPUB parser with JSZip.
-  *Fix*: Remove from package.json to reduce bundle size.
 
 - [ ] **Event listeners not cleaned up in renderLibrary** ([main.js:409-417](www/main.js#L409-L417))
   Each call to `renderLibrary()` adds click event listeners to document items. When the list is re-rendered, old DOM elements are removed but if any references were kept, listeners could leak.
@@ -57,5 +49,4 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 - [ ] **Testing and Validation**: Test on various Android devices for performance. Add unit tests for parsing functions using a framework like Jest.
 - [ ] **Build and Deployment**: Ensure APK signing and testing before release. Update `package.json` with proper build scripts if bundling is added.
-- [ ] **Add window resize handler**: Recalculate `wordsPerPage` when screen orientation or window size changes.
 - [ ] **Consider TypeScript**: Adding TypeScript would catch many of these bugs at compile time (e.g., the missing await, operator precedence issues).
