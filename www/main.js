@@ -51,6 +51,41 @@ function mergeTrailingPunctuation(words) {
   return result;
 }
 
+// Block-level elements that should have spacing around them
+const BLOCK_ELEMENTS = new Set([
+  'P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+  'LI', 'TR', 'TD', 'TH', 'BR', 'HR',
+  'BLOCKQUOTE', 'PRE', 'ARTICLE', 'SECTION', 'HEADER', 'FOOTER',
+  'NAV', 'ASIDE', 'FIGCAPTION', 'FIGURE', 'DT', 'DD'
+]);
+
+function extractTextWithSpacing(element) {
+  if (!element) return '';
+
+  let result = '';
+
+  for (const node of element.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      result += node.textContent;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // Add space before block elements
+      if (BLOCK_ELEMENTS.has(node.tagName)) {
+        result += ' ';
+      }
+
+      // Recursively extract text from child elements
+      result += extractTextWithSpacing(node);
+
+      // Add space after block elements
+      if (BLOCK_ELEMENTS.has(node.tagName)) {
+        result += ' ';
+      }
+    }
+  }
+
+  return result;
+}
+
 // Page-based rendering for normal reading
 let renderedStartIndex = 0;
 let renderedEndIndex = 0;
@@ -792,7 +827,9 @@ async function parseEPUB(file) {
           const htmlText = await htmlFile.async('text');
           console.log('HTML length for', href, ':', htmlText.length);
           const htmlDoc = parser.parseFromString(htmlText, 'text/html');
-          const text = htmlDoc.body ? htmlDoc.body.textContent : '';
+
+          // Extract text with proper spacing between block elements
+          const text = extractTextWithSpacing(htmlDoc.body);
           console.log('Text length:', text.length);
 
           // Track chapter start word index BEFORE adding words
