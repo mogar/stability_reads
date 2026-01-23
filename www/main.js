@@ -530,13 +530,6 @@ function renderNormalReading() {
   renderedEndIndex = renderedStartIndex + fittingWords;
   wordsPerPage = fittingWords;
 
-  console.log('renderNormalReading:', {
-    renderedStartIndex,
-    renderedEndIndex,
-    fittingWords,
-    wordsPerPage
-  });
-
   updateHighlight();
   updateProgress();
 }
@@ -563,17 +556,6 @@ function calculateWordsPerPage() {
   const linesPerPage = Math.floor(availableHeight / lineHeight);
 
   const estimated = Math.max(1, wordsPerLine * linesPerPage);
-
-  console.log('calculateWordsPerPage:', {
-    containerHeight,
-    containerWidth,
-    availableHeight,
-    availableWidth,
-    fontSize,
-    wordsPerLine,
-    linesPerPage,
-    estimated
-  });
 
   // Return a reasonable estimate
   return estimated > 0 ? estimated : 50;
@@ -783,7 +765,6 @@ async function parseEPUB(file) {
       throw new Error('Invalid EPUB: Missing container.xml. This file may be corrupted or not a valid EPUB.');
     }
     const containerText = await containerFile.async('text');
-    console.log('Container XML:', containerText.substring(0, 200));
     const parser = new DOMParser();
     const containerDoc = parser.parseFromString(containerText, 'text/xml');
     const rootfileElement = containerDoc.querySelector('rootfile');
@@ -791,7 +772,6 @@ async function parseEPUB(file) {
       throw new Error('Invalid EPUB: Cannot find content location in container.xml');
     }
     const rootfile = rootfileElement.getAttribute('full-path');
-    console.log('Rootfile:', rootfile);
 
     // Parse OPF
     const opfFile = zip.file(rootfile);
@@ -799,7 +779,6 @@ async function parseEPUB(file) {
       throw new Error('Invalid EPUB: Cannot find content file. The EPUB structure may be malformed.');
     }
     const opfText = await opfFile.async('text');
-    console.log('OPF length:', opfText.length);
     const opfDoc = parser.parseFromString(opfText, 'text/xml');
 
     // Get base path for manifest hrefs
@@ -810,11 +789,9 @@ async function parseEPUB(file) {
     opfDoc.querySelectorAll('manifest item').forEach(item => {
       manifest[item.getAttribute('id')] = basePath + item.getAttribute('href');
     });
-    console.log('Manifest items:', Object.keys(manifest).length);
 
     // Get spine
     const spine = opfDoc.querySelectorAll('spine itemref');
-    console.log('Spine items:', spine.length);
 
     if (spine.length === 0) {
       throw new Error('Invalid EPUB: No chapters found. The EPUB may be empty or corrupted.');
@@ -828,22 +805,18 @@ async function parseEPUB(file) {
     for (const itemref of spine) {
       const id = itemref.getAttribute('idref');
       const href = manifest[id];
-      console.log('Processing spine item:', id, href);
       if (href && (href.endsWith('.html') || href.endsWith('.xhtml') || href.endsWith('.htm'))) {
         try {
           const htmlFile = zip.file(href);
           if (!htmlFile) {
-            console.log('Chapter file not found:', href);
             failedChapters++;
             continue;
           }
           const htmlText = await htmlFile.async('text');
-          console.log('HTML length for', href, ':', htmlText.length);
           const htmlDoc = parser.parseFromString(htmlText, 'text/html');
 
           // Extract text with proper spacing between block elements
           const text = extractTextWithSpacing(htmlDoc.body);
-          console.log('Text length:', text.length);
 
           // Track chapter start word index BEFORE adding words
           const chapterStartWordIndex = allWords.length;
@@ -879,20 +852,14 @@ async function parseEPUB(file) {
           allWords = allWords.concat(chapterWords);
           successfulChapters++;
         } catch (e) {
-          console.log('Error processing', href, ':', e);
           failedChapters++;
         }
       }
     }
 
-    console.log('Total words:', allWords.length);
-    console.log('Successfully parsed chapters:', successfulChapters, 'Failed:', failedChapters);
-
     if (allWords.length === 0) {
       throw new Error('EPUB contains no readable text. All chapters failed to parse or are empty.');
     }
-
-    console.log('TOC entries:', toc.length);
 
     // Warn user if some chapters failed but we got some content
     if (failedChapters > 0 && successfulChapters > 0) {
