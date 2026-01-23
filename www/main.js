@@ -708,13 +708,13 @@ function toggleAutoPace(event) {
   }
 }
 
-function openDocument(doc) {
+async function openDocument(doc) {
   currentDocument = doc;
   readingState.documentId = doc.id;
   readingState.currentWordIndex = doc.lastReadPosition;
   readingState.words = doc.words;
   doc.lastAccessedAt = Date.now();
-  db.setItem(doc.id, doc); // Update access time
+  await db.setItem(doc.id, doc); // Update access time
   switchView('normal');
   renderNormalReading();
 }
