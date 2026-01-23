@@ -389,7 +389,7 @@ function renderLibrary() {
     const item = document.createElement('div');
     item.className = 'document-item';
     item.setAttribute('data-doc-id', doc.id);
-    const progress = Math.round((doc.lastReadPosition / doc.totalWords) * 100);
+    const progress = doc.totalWords > 0 ? Math.round((doc.lastReadPosition / doc.totalWords) * 100) : 0;
     const progressText = `${progress}% • ${doc.lastReadPosition}/${doc.totalWords} words`;
 
     const filenameDiv = document.createElement('div');
@@ -588,8 +588,9 @@ function updateHighlight() {
 }
 
 function updateProgress() {
-  const progress = Math.round((readingState.currentWordIndex / readingState.words.length) * 100);
-  document.getElementById('progress').textContent = `${progress}% • Word ${readingState.currentWordIndex + 1}/${readingState.words.length}`;
+  const totalWords = readingState.words.length;
+  const progress = totalWords > 0 ? Math.round((readingState.currentWordIndex / totalWords) * 100) : 0;
+  document.getElementById('progress').textContent = `${progress}% • Word ${readingState.currentWordIndex + 1}/${totalWords}`;
 }
 
 function renderSpeedReading() {
@@ -615,8 +616,9 @@ function updateWordDisplay() {
 }
 
 function updateProgressSpeed() {
-  const progress = Math.round((readingState.currentWordIndex / readingState.words.length) * 100);
-  document.getElementById('progress-speed').textContent = `${progress}% • Word ${readingState.currentWordIndex + 1}/${readingState.words.length}`;
+  const totalWords = readingState.words.length;
+  const progress = totalWords > 0 ? Math.round((readingState.currentWordIndex / totalWords) * 100) : 0;
+  document.getElementById('progress-speed').textContent = `${progress}% • Word ${readingState.currentWordIndex + 1}/${totalWords}`;
 }
 
 function updateSpeedDisplay() {
@@ -932,7 +934,7 @@ async function saveReadingState() {
     // Update progress in library view
     const item = document.querySelector(`[data-doc-id="${readingState.documentId}"]`);
     if (item) {
-      const progress = Math.round((currentDocument.lastReadPosition / currentDocument.totalWords) * 100);
+      const progress = currentDocument.totalWords > 0 ? Math.round((currentDocument.lastReadPosition / currentDocument.totalWords) * 100) : 0;
       const progressText = `${progress}% • ${currentDocument.lastReadPosition}/${currentDocument.totalWords} words`;
       item.children[1].textContent = progressText;
     }
@@ -972,7 +974,7 @@ function renderTOC() {
 
     const progress = document.createElement('div');
     progress.className = 'toc-item-progress';
-    const percentage = Math.round((item.wordIndex / currentDocument.totalWords) * 100);
+    const percentage = currentDocument.totalWords > 0 ? Math.round((item.wordIndex / currentDocument.totalWords) * 100) : 0;
     progress.textContent = `${percentage}% • Word ${item.wordIndex + 1}`;
 
     tocItem.appendChild(title);

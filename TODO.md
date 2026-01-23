@@ -6,18 +6,6 @@ This file documents identified errors, security vulnerabilities, performance iss
 
 ## Errors and Bugs
 
-- [ ] **Deprecated `substr()` usage** ([main.js:28](www/main.js#L28))
-  `Math.random().toString(36).substr(2)` uses the deprecated `substr()` method.
-  *Fix*: Replace with `substring(2)` or `slice(2)`.
-
-- [ ] **Missing `await` on database write** ([main.js:717](www/main.js#L717))
-  `db.setItem(doc.id, doc)` is called without `await` when opening a document. If the user navigates away quickly, the lastAccessedAt update may not persist.
-  *Fix*: Add `await` before the `db.setItem()` call.
-
-- [ ] **Division by zero potential in progress calculations** ([main.js:591](www/main.js#L591), [618](www/main.js#L618), [935](www/main.js#L935), [975](www/main.js#L975))
-  Progress calculations divide by `readingState.words.length` or `currentDocument.totalWords` without checking if they're zero, which would result in NaN.
-  *Fix*: Add guards to return 0% progress when word count is zero.
-
 - [ ] **Multiple playback intervals possible** ([main.js:643](www/main.js#L643))
   `startPlayback()` creates a new interval without checking if one already exists. Calling it multiple times could create multiple concurrent intervals.
   *Fix*: Call `stopPlayback()` at the start of `startPlayback()` or check if `playbackInterval` is already set.
