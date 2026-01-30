@@ -239,12 +239,13 @@ function setupEventListeners() {
     switchView('speed');
     renderSpeedReading();
   });
-  document.getElementById('night-mode-btn').addEventListener('click', () => {
-    isNightMode = !isNightMode;
-    document.body.classList.toggle('night', isNightMode);
-    localStorage.setItem('nightMode', isNightMode);
-  });
+  document.getElementById('night-mode-btn').addEventListener('click', toggleNightMode);
+  document.getElementById('speed-night-mode-btn').addEventListener('click', toggleNightMode);
   document.getElementById('menu-btn').addEventListener('click', (e) => {
+    e.preventDefault();
+    openTOC();
+  });
+  document.getElementById('speed-menu-btn').addEventListener('click', (e) => {
     e.preventDefault();
     openTOC();
   });
@@ -779,6 +780,12 @@ function toggleRampToSpeed(event) {
     stopPlayback();
     startPlayback();
   }
+}
+
+function toggleNightMode() {
+  isNightMode = !isNightMode;
+  document.body.classList.toggle('night', isNightMode);
+  localStorage.setItem('nightMode', isNightMode);
 }
 
 async function openDocument(doc) {
