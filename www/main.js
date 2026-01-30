@@ -7,8 +7,8 @@ const CONFIG = {
   DEFAULT_WPM: 300,
   MIN_WPM: 120,
   MAX_WPM: 900,
-  AUTO_PACE_START_WPM: 120,
-  AUTO_PACE_DURATION_WORDS: 100,
+  RAMP_TO_SPEED_START_WPM: 120,
+  RAMP_TO_SPEED_DURATION_WORDS: 100,
 
   // Font size settings
   DEFAULT_FONT_SIZE: 16,
@@ -52,10 +52,10 @@ let readingState = {
   isPlaying: false,
   speedWPM: CONFIG.DEFAULT_WPM,
   targetSpeedWPM: CONFIG.DEFAULT_WPM,
-  autoPaceEnabled: false,
-  autoPaceStartWPM: CONFIG.AUTO_PACE_START_WPM,
-  autoPaceDurationWords: CONFIG.AUTO_PACE_DURATION_WORDS,
-  autoPaceStartWordIndex: 0
+  rampToSpeedEnabled: false,
+  rampToSpeedStartWPM: CONFIG.RAMP_TO_SPEED_START_WPM,
+  rampToSpeedDurationWords: CONFIG.RAMP_TO_SPEED_DURATION_WORDS,
+  rampToSpeedStartWordIndex: 0
 };
 
 // UI state
@@ -315,7 +315,7 @@ function setupEventListeners() {
   document.getElementById('play-pause-btn').addEventListener('click', togglePlayPause);
   document.getElementById('reset-btn').addEventListener('click', resetReading);
   document.getElementById('speed-slider').addEventListener('input', debounce(updateSpeed, CONFIG.SPEED_SLIDER_DEBOUNCE));
-  document.getElementById('auto-pace-toggle').addEventListener('change', toggleAutoPace);
+  document.getElementById('ramp-to-speed-toggle').addEventListener('change', toggleRampToSpeed);
 
   // Allow tapping the reading area to play/pause
   document.getElementById('rsvp-container').addEventListener('click', togglePlayPause);
@@ -685,9 +685,9 @@ function togglePlayPause() {
   readingState.isPlaying = !readingState.isPlaying;
   document.getElementById('play-pause-btn').textContent = readingState.isPlaying ? '‖' : '▶';
   if (readingState.isPlaying) {
-    if (readingState.autoPaceEnabled) {
-      readingState.autoPaceStartWordIndex = readingState.currentWordIndex;
-      readingState.autoPaceStartWPM = CONFIG.AUTO_PACE_START_WPM;
+    if (readingState.rampToSpeedEnabled) {
+      readingState.rampToSpeedStartWordIndex = readingState.currentWordIndex;
+      readingState.rampToSpeedStartWPM = CONFIG.RAMP_TO_SPEED_START_WPM;
       readingState.targetSpeedWPM = readingState.speedWPM;
     }
     startPlayback();
@@ -715,7 +715,7 @@ function scheduleNextWord() {
       updateWordDisplay();
       updateProgressSpeed();
       updateSpeedDisplay();
-      // Schedule next word with fresh delay (handles auto-pace naturally)
+      // Schedule next word with fresh delay (handles ramp-to-speed naturally)
       scheduleNextWord();
     }
   }, delay);
@@ -723,9 +723,9 @@ function scheduleNextWord() {
 
 function calculateDelay() {
   let wpm = readingState.speedWPM;
-  if (readingState.autoPaceEnabled) {
-    const progress = Math.min((readingState.currentWordIndex - readingState.autoPaceStartWordIndex) / readingState.autoPaceDurationWords, 1);
-    wpm = readingState.autoPaceStartWPM + (readingState.targetSpeedWPM - readingState.autoPaceStartWPM) * progress;
+  if (readingState.rampToSpeedEnabled) {
+    const progress = Math.min((readingState.currentWordIndex - readingState.rampToSpeedStartWordIndex) / readingState.rampToSpeedDurationWords, 1);
+    wpm = readingState.rampToSpeedStartWPM + (readingState.targetSpeedWPM - readingState.rampToSpeedStartWPM) * progress;
   }
   return 60000 / wpm;
 }
@@ -742,10 +742,10 @@ function resetReading() {
 
 function updateSpeed(event) {
   const newSpeed = parseInt(event.target.value);
-  if (readingState.autoPaceEnabled && readingState.isPlaying) {
+  if (readingState.rampToSpeedEnabled && readingState.isPlaying) {
     // User-initiated speed changes take effect immediately
-    readingState.autoPaceStartWPM = newSpeed;
-    readingState.autoPaceStartWordIndex = readingState.currentWordIndex;
+    readingState.rampToSpeedStartWPM = newSpeed;
+    readingState.rampToSpeedStartWordIndex = readingState.currentWordIndex;
   }
   readingState.speedWPM = newSpeed;
   readingState.targetSpeedWPM = newSpeed;
@@ -756,11 +756,11 @@ function updateSpeed(event) {
   }
 }
 
-function toggleAutoPace(event) {
-  readingState.autoPaceEnabled = event.target.checked;
-  if (readingState.autoPaceEnabled) {
-    readingState.autoPaceStartWordIndex = readingState.currentWordIndex;
-    readingState.autoPaceStartWPM = readingState.speedWPM;
+function toggleRampToSpeed(event) {
+  readingState.rampToSpeedEnabled = event.target.checked;
+  if (readingState.rampToSpeedEnabled) {
+    readingState.rampToSpeedStartWordIndex = readingState.currentWordIndex;
+    readingState.rampToSpeedStartWPM = readingState.speedWPM;
     readingState.targetSpeedWPM = readingState.speedWPM;
   }
   if (readingState.isPlaying) {
