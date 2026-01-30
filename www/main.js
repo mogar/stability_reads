@@ -639,7 +639,7 @@ function updateHighlight() {
 function updateProgress() {
   const totalWords = readingState.words.length;
   const progress = totalWords > 0 ? Math.round((readingState.currentWordIndex / totalWords) * 100) : 0;
-  document.getElementById('progress').textContent = `${progress}% • Word ${readingState.currentWordIndex + 1}/${totalWords}`;
+  document.getElementById('progress').innerHTML = `${progress}%<br>${readingState.currentWordIndex + 1}/${totalWords}`;
 }
 
 function renderSpeedReading() {
@@ -667,7 +667,7 @@ function updateWordDisplay() {
 function updateProgressSpeed() {
   const totalWords = readingState.words.length;
   const progress = totalWords > 0 ? Math.round((readingState.currentWordIndex / totalWords) * 100) : 0;
-  document.getElementById('progress-speed').textContent = `${progress}% • Word ${readingState.currentWordIndex + 1}/${totalWords}`;
+  document.getElementById('progress-speed').innerHTML = `${progress}%<br>${readingState.currentWordIndex + 1}/${totalWords}`;
 }
 
 function updateSpeedDisplay() {
