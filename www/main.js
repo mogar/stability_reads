@@ -432,6 +432,7 @@ function goToNextPage() {
     readingState.currentWordIndex + wordsPerPage
   );
   setCurrentWord(newIndex);
+  saveReadingState();
 }
 
 function goToPreviousPage() {
@@ -440,6 +441,7 @@ function goToPreviousPage() {
     readingState.currentWordIndex - wordsPerPage
   );
   setCurrentWord(newIndex);
+  saveReadingState();
 }
 
 async function loadDocuments() {
@@ -691,6 +693,7 @@ function togglePlayPause() {
     startPlayback();
   } else {
     stopPlayback();
+    saveReadingState();
   }
 }
 
@@ -964,7 +967,20 @@ function setupLifecycleListeners() {
         saveReadingState();
       }
     });
+    window.Capacitor.Plugins.App.addListener('pause', () => {
+      saveReadingState();
+    });
   }
+
+  window.addEventListener('beforeunload', () => {
+    saveReadingState();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      saveReadingState();
+    }
+  });
 }
 
 async function saveReadingState() {

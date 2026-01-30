@@ -25,10 +25,6 @@ This file documents identified errors, security vulnerabilities, performance iss
   All application logic is in one file with module-level global variables. This makes the code harder to test, reason about, and maintain.
   *Fix*: Refactor into modules (e.g., `storage.js`, `epub-parser.js`, `txt-parser.js`, `reading-state.js`, `views/library.js`, `views/normal.js`, `views/speed.js`).
 
-- [ ] **Debug console.log statements throughout** ([main.js](www/main.js))
-  Multiple `console.log` calls used for debugging should be removed for production.
-  *Fix*: Remove all debug logging or use a logging utility that can be disabled.
-
 ## Additional Recommendations
 
 - [ ] **Testing and Validation**: Test on various Android devices for performance. Add unit tests for parsing functions using a framework like Jest.
