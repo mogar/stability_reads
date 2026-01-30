@@ -698,9 +698,28 @@ function togglePlayPause() {
 }
 
 let playbackTimeout;
+let wakeLock = null;
+
+async function acquireWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+    } catch (e) {
+      // Wake lock request failed (e.g., low battery)
+    }
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock) {
+    wakeLock.release();
+    wakeLock = null;
+  }
+}
 
 function startPlayback() {
   stopPlayback(); // Clear any existing timeout first
+  acquireWakeLock();
   scheduleNextWord();
 }
 
@@ -732,6 +751,7 @@ function calculateDelay() {
 
 function stopPlayback() {
   clearTimeout(playbackTimeout);
+  releaseWakeLock();
 }
 
 function resetReading() {
