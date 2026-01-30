@@ -231,10 +231,6 @@ function setupEventListeners() {
   });
 
   // Normal view
-  document.getElementById('back-to-library').addEventListener('click', async () => {
-    await saveReadingState();
-    switchView('library');
-  });
   document.getElementById('to-library').addEventListener('click', async () => {
     await saveReadingState();
     switchView('library');
@@ -300,10 +296,6 @@ function setupEventListeners() {
   setupNormalViewSwipeGestures();
 
   // Speed view
-  document.getElementById('back-to-library-speed').addEventListener('click', async () => {
-    await saveReadingState();
-    switchView('library');
-  });
   document.getElementById('to-library-speed').addEventListener('click', async () => {
     await saveReadingState();
     switchView('library');
