@@ -980,14 +980,22 @@ async function deleteDocument(docId) {
 init();
 setupLifecycleListeners();
 
+function pauseSpeedReadingIfPlaying() {
+  if (readingState.isPlaying) {
+    togglePlayPause();
+  }
+}
+
 function setupLifecycleListeners() {
   if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
     window.Capacitor.Plugins.App.addListener('appStateChange', ({ isActive }) => {
       if (!isActive) {
+        pauseSpeedReadingIfPlaying();
         saveReadingState();
       }
     });
     window.Capacitor.Plugins.App.addListener('pause', () => {
+      pauseSpeedReadingIfPlaying();
       saveReadingState();
     });
   }
@@ -998,6 +1006,7 @@ function setupLifecycleListeners() {
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
+      pauseSpeedReadingIfPlaying();
       saveReadingState();
     }
   });
